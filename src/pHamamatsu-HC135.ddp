@@ -1,0 +1,693 @@
+U,PMT_HC135
+I,Photon Count,0,input,numeric
+// Channel exists as placeholder for parsed data
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Status,1,input,string
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,Poll,0
+function Poll(string out, bytesToRead)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   // lock the port
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   // clear anything pending
+   Purge()
+   // output our string
+   Write(out)
+   // and read until the eol:
+   if (bytesToRead > 0)
+      in = Read(bytesToRead)
+   endif
+   // release the port
+   UnlockPort()
+   // and return the response
+   return(in)
+catch()
+   // error occured
+   UnlockPort()
+   throw()
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,stream,0
+// Tells PMT tube to begin continuous read sequence
+//
+// Parameters: None
+// Returns: 0 for success; -1 for failure
+//
+// To start continuous datastream:
+// send "C[CR]" where  C = ASCII "C"
+//                   [CR]= ASCII 013 / 0x0D
+//
+// And to end:
+// send "[CR]" only
+//
+// Note: spaces are not ignored, will cause error
+
+function stream()
+
+if(argc>0)           // nitpick about # of parameters
+   throw(strDevice+": Invalid # of parameters passed to stream()")
+endif
+
+if (IsEmpty(isStreaming))
+   reset()
+endif
+
+if (isSeqRead)
+   print("Cannot start/stop continuous stream during sequential read")
+endif
+
+if (!isStreaming)
+   print("Beginning continuous read sequence")
+   isStreaming = 1
+   Poll("C"+Chr(13),0)  // send 'start' command, read 1 line
+else
+   print("Ending continuous read sequence")
+   isStreaming = 0
+   Poll(Chr(13),2)      // stop any continuous reads
+   linesRead = 0        // reset input lines tracker
+   bytesRead = 0        // reset input length tracker
+endif
+
+
+return(NULL)      // this line should never execute
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,parseData,1
+// Function called upon reaching 4 bytes of streamed
+// input data.
+
+function parseData()
+
+private stamp = 0
+private string dataBits = {"","","",""} // init string array
+private string dataRead = ""
+
+try
+   dataRead = Read(4)   // read 4 consecutive bytes
+catch()
+   print("parseData called for less than 4 bytes")
+   return
+endcatch
+
+bytesRead = 0     // reset counter for input data length
+
+dataBits[3] = Mid(dataRead,0,1)   // reverse data words
+dataBits[2] = Mid(dataRead,1,1)
+dataBits[1] = Mid(dataRead,2,1)
+dataBits[0] = Mid(dataRead,3,1)
+
+// convert bytes to 32-bit integer & add to device's "Photon count" channel
+Local.Channel.AddValue(strDevice, 0, "Photon Count", 0, InsertTime(To.Long(Asc(dataBits)),stamp.Time,0))
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,reset,0
+// Initialize variables local to this protocol
+//
+// PMT has default values upon powering up:
+//    P = 100 for 1 sec integration time
+//    R = 1 so each S command returns 1 reading
+//    V = 0, HI volt turned off
+//    O = 0, set to GND
+// 
+// It's assumed the PMT is not streaming, HI voltage
+// off upon starting DAQFactory but in case it's not,
+// attempt to stop streaming, then explicitly set HI
+// voltage low.
+
+local P = 100           // 1000ms integration time
+local R = 1             // 1 readings/sequence
+local V = 0             // PMT turned off
+local O = 0             // user DI/O set to GND
+local isStreaming = 0   // streaming off initially
+local isSeqRead = 0     // seq. read off initially
+local bytesRead = 0     // #bytes in buffer while reading
+local linesRead = 0     // #lines read in current cycle
+
+print("Finished initializing device")
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,seqRead,0
+// Tells PMT tube to perform single read sequence
+//
+// Parameters: None
+// Returns: 0 for success; -1 for failure
+//
+// Send "S[CR]" where S = ASCII "S"
+//                   [CR] = ASCII 013 / 0x0D'
+// Note: spaces are not ignored, will cause error
+
+function seqRead()
+   
+if(argc>0)           // nitpick about # of parameters
+   throw(strDevice+": Invalid # parameters passed to seqRead()")
+endif
+
+if (IsEmpty(isStreaming))
+   reset()
+endif
+
+if(isStreaming)       // if global flag says streaming ON
+   print("Cannot begin seq. read during a streaming read")
+   return(-1)         // indicate failure tho
+else
+   Poll(Chr(13),0)      // stop any continuous reads
+   Purge()              // clear the buffer
+   Poll("S"+Chr(13),0)  // send command
+   linesRead = 0        // reset # of seq. lines read in
+   isStreaming = 1      // signal incoming datastream
+   isSeqRead = 1        // also signal not continuous
+   print("Beginning sequential read (R="+R+")...")
+endif
+return(NULL)      // this line should never execute
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,setV,0
+// Tells PMT to set HI voltage level
+//
+// Parameters: 1      set from 0-1200
+//
+// Send/1: "D[CR]"   where D = ASCII "D"
+// Send/2: "V##[CR]" where V = ASCII "V"
+//                         ##= 0-1200 as 2 bytes
+//                       [CR]= ASCII 013 or 0x0D
+// Note: spaces are not ignored, will cause error
+
+Function setV()
+
+private inVal
+
+if (argc < 1)           // if missing parameter
+   inVal = -10             // assume default voltage
+else
+   inVal = arg0
+endif
+
+if (IsEmpty(isStreaming))
+   reset()
+endif
+
+if (isStreaming)        // if busy
+   print("Cannot change parameter V during a read sequence")
+   return(-1)              // indicate failure
+endif
+
+private string response = ""  // init ACK string
+inVal = Floor(inVal)          // remove fractions from input
+if ( (inVal<0) || (inVal>1200) )
+   print("Setting PMT voltage to default level")
+   response = Poll("D"+Chr(13),2)
+else
+   print("Setting PMT voltage to "+inVal+" (0-1200)")
+   response = Poll("V"+ChrA(From.rWord(inVal))+Chr(13),2)
+endif
+
+switch               // response handler
+   case (response == "")
+      System.ErrorMessage("No response received from PMT")
+      return(-1)
+   case (response == "BC")
+      System.ErrorMessage("Bad command sent to PMT")
+      return(-1)
+   case (response == "BA")
+      System.ErrorMessage("Bad argument sent to PMT")
+      return(-1)
+   case (response == "VA")
+      if ( (inVal<0) || (inVal>1200) )
+         V = -1
+      else
+         V = inVal
+      endif
+      print("Successfully set PMT voltage... saved as V="+V)
+      return(0)
+   default
+      print("Unrecognized response from PMT")
+      return(-1)
+endcase
+return(NULL)   // shouldn't ever reach here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,setR,0
+// Tells PMT how many readings per trigger sequence
+// 
+// Parameters:    1     # of readings, 001-255
+//
+// Send: "R#[CR]" where R = ASCII "R"
+//                      # = 001-255 (single bit)
+//                          OK to encode # as ASCII char
+//                   [CR] = ASCII 013 or 0x0D
+// Note: spaces are not ignored, will cause Bad Command
+
+function setR(inVal)
+   
+if (argc < 1)           // if wrong # of parameters
+   Throw(strDevice+": Incorrect # of parameters passed to setR()")
+endif
+
+if (IsEmpty(isStreaming))
+   reset()
+endif
+
+if (isStreaming)        // if busy
+   print("Cannot change parameter R during a read sequence")
+   return(-1)              // indicate failure
+endif   
+
+private string response = ""        // init ACK string
+inVal = Floor(inVal)                // remove fractions
+inVal = iif(inVal>255,255,inVal)    // check high bounds
+inVal = iif(inVal<1,1,inVal)        // check low bounds
+
+print("Setting #readings/seq. to "+inVal)
+response = Poll("R"+Chr(inVal)+Chr(13),2)    // send cmd
+
+switch      // response handler
+   case (response == "")
+      print("No response received from PMT")
+      return(-1)
+   case (response == "BC")
+      print("Bad command sent to PMT")
+   case (response == "BA")
+      print("Bad argument sent to PMT")
+   case (response == "VA")
+      R = inVal   // if success, save value to protocol's R
+      print("Successfully set #readings/seq... saved as R="+R)
+      return(0)
+   default
+      print("Unrecognized response from PMT while attempting to set PMT readings per sequence.")
+      return(-1)
+endcase
+return(NULL)   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,setP,0
+// Sets PMT integration time
+// 
+// Parameters:    1     # 10msec intervals, 1-100
+//
+// Send: "P#[CR]" where P = ASCII "P"
+//                      # = 001-100 (single bit)
+//                          OK to encode # as ASCII char
+//                   [CR] = ASCII 013 or 0x0D
+// Note: spaces are not ignored, will cause Bad Command
+
+function setP(inVal)
+   
+if (argc < 1) )         // if wrong # of parameters
+   Throw(strDevice+" Incorrect # of parameters passed to setP()")
+endif
+
+if (IsEmpty(isStreaming))
+   reset()
+endif
+
+if (isStreaming)        // if busy
+   print("Cannot change parameter P during a read sequence")
+   return(-1)              // indicate failure
+endif
+   
+private string response = ""     // init ACK string
+inVal = Floor(inVal)             // remove fractions
+inVal = iif(inVal<1,1,inVal)     // check lower bounds
+inVal = iif(inVal>100,100,inVal) // check upper bounds
+
+print("Setting # of 10ms intervals to integrate over = "+DoubleToStr(inVal))
+response = Poll("P"+Chr(inVal)+Chr(13),2)
+
+
+switch      // response handler
+   case (response == "")
+      print("No response received from PMT")
+      return(-1)
+   case (response == "BC")
+      print("Bad command sent to PMT")
+      return(-1)
+   case (response == "BA")
+      print("Bad argument sent to PMT")
+      return(-1)
+   case (response == "VA")
+      P = inVal   // if success, save value to protocol's P
+      print("Successfully set integration intevals... saved as P="+DoubleToStr(P))
+      return(0)
+   default
+      print("Unrecognized response from PMT while attempting to set PMT readings per sequence.")
+      return(-1)
+endcase
+return(NULL)   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,nowTimeString,1
+// Function generates current date/time in conventional US format:
+//    MM/DD/YY HH:mm:ss
+// 
+// Sure, I could replace the formatting with "%c" but that puts 
+// the return value at the mercy of the Windows Locale settings
+
+//String function nowTimeString()
+
+return (FormatDateTime("%m/%d/%Y %H:%M:%S",SysTime())+" "+strDevice+": ")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,seqReadEnd,1
+// privately called function checks to see if the sequential
+// read has finished, then sets appropriate flags
+
+Function seqReadEnd()
+   
+   if (!isSeqRead)
+      return (0)
+   endif
+   
+   if (linesRead == R) 
+      isSeqRead = 0     // signal end of seq read
+      isStreaming = 0   // signal end of datastream
+      linesRead = 0     // 
+      bytesRead = 0     // 
+      print("Success reaching end of sequential read")
+   endif
+
+
+
+
+
+
+
+
+ENDIO
+
+F,print,0
+
+Function print(string inStr)
+   
+   private string out = strDevice+": "+inStr
+   
+   Local.Channel.AddValue(strDevice,0,"Status",0,out)
+   
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,PollUntil,0
+function Poll(string out, until)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   // lock the port
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   // clear anything pending
+   Purge()
+   // output our string
+   Write(out)
+   // and read until the eol:
+   in = ReadUntil(until)
+   // release the port
+   UnlockPort()
+   // and return the response
+   return(in)
+catch()
+   // error occured
+   UnlockPort()
+   throw()
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnLoad
+
+print("Loading device")
+
+reset()
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnUnload
+
+
+// shut off PMT tube datastream
+if (isStreaming)
+   stream()
+endif
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnReceive
+// Event is triggered upon every character received
+
+if (isStreaming)
+   bytesRead +=1        // add 1 char to input length counter
+   
+   if(bytesRead == 4)   // @ 4 char long, look @ data
+      parseData()          // split data string up
+      linesRead +=1        // indicate another line read
+      
+      if (isSeqRead)       // if not reading continuous
+         seqReadEnd()         // check ending conditions
+      endif
+   endif
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnSend
+
+
+
+
+
+
+
+
+
+ENDIO
+

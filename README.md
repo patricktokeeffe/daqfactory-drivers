@@ -10,6 +10,41 @@ here.
 2. Restart DAQFActory
 
 
+## Available Drivers
+
+### ATI sonic anemometer
+
+For SATI-* series ultrasonic anemometers by Applied Technologies Inc (ATI).
+Developed using type K and Sx models but probably usable or at least adaptable
+to other types. 
+
+
+### Campbell Scientific sonic anemometer
+
+For the older CSAT3 ultrasonic anemometer made by Campbell Scientific.
+
+
+### Hamamatsu photomultiplier tube (PMT)
+
+For model HC-135 photomultplier tube (PMT) manufactured by Hamamatsu Corp. This
+is the analytical component of the Hills Scientific Fast Isoprene Sensor (FIS).
+
+
+### LICOR open-path CO2 analyzer
+
+For model LI-7500 open-path infrared CO2/H2O analyzer (IRGA).
+
+
+### TSI condensation particle counter
+
+Developed for Model 3775 Condensation Particle Counter (CPC) by TSI.
+
+
+### Vaisala WXT510 weather station
+
+For the WXT510 compact total weather station by Vaisala.
+
+
 
 ## License
 

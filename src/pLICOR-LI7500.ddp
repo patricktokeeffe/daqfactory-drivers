@@ -1,0 +1,517 @@
+U,LI7500
+I,CO2 absorptance,0,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,CO2 (mmol/m^3),1,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,H2O absorptance,2,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,H2O (mmol/m^3),3,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Temp (C),4,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Pressure (kPa),5,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Aux,6,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Detector cooler (Volts),7,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Diag word,8,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Diag PLL OK,9,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Diag Detector OK,10,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Diag Chopper OK,11,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Diag AGC value,12,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Status,13,input,string
+
+
+
+
+
+
+
+ENDIO
+
+F,Poll,0
+function Poll(string out, until)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   // lock the port
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   // clear anything pending
+   Purge()
+   // output our string
+   Write(out)
+   // and read until the eol:
+   in = ReadUntil(until) 
+   // release the port
+   UnlockPort()
+   // and return the response
+   return(in)
+catch()
+   // error occured
+   UnlockPort()
+   throw()
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,reset,0
+// does init
+
+local isStreaming = 0  // no streaming by default
+
+print("Initializing device...")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,nowTimeString,0
+// returns nicely formatted string with device name & semicolon
+
+Function nowTimeString()
+
+return (FormatDateTime("%m/%d/%Y %H:%M:%S",SysTime())+" "+strDevice+": ")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,parseLI7500data,1
+
+
+Function parseLI7500data()
+   ignore("C1000")
+   private string dataIn = ReadUntil(10)  // read to LF
+   private stamp = 0
+   //stamp.Time = roundToTenths(stamp.Time)
+   
+   private string dataBits = Parse(dataIn,-1,Chr(9))
+      // dataBits[0] = diag value
+      //          1  = COD mmol/m3
+      //          2  = H2OD mmol/m3
+      //          3  = temp degC
+      //          4  = pressure kPa
+      //          5  = [LF]
+   
+   Local.Channel.AddValue(strDevice,0,"Diag word",0,InsertTime(StrToDouble(dataBits[0]),stamp.Time,0))
+   Local.Channel.AddValue(strDevice,0,"CO2 (mmol/m^3)",0,InsertTime(StrToDouble(dataBits[1]),stamp.Time,0))
+   Local.Channel.AddValue(strDevice,0,"H2O (mmol/m^3)",0,InsertTime(StrToDouble(dataBits[2]),stamp.Time,0))
+   Local.Channel.AddValue(strDevice,0,"Temp (C)",0,InsertTime(StrToDouble(dataBits[3]),stamp.Time,0))
+   Local.Channel.AddValue(strDevice,0,"Pressure (kPa)",0,InsertTime(StrToDouble(dataBits[4]),stamp.Time,0))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,print,0
+
+Function print(string inStr)
+   
+   if (argc != 1)
+      Throw("LI7500 Invalid # of parameters passed to print()")
+   endif
+   
+   private string out = nowTimeString()+inStr
+   Local.Channel.AddValue(strDevice,0,"Status",0,out)
+
+
+
+
+
+
+
+ENDIO
+
+F,stream,0
+
+isStreaming = !isStreaming
+print("Streaming mode toggled")
+
+
+
+
+ENDIO
+
+F,roundToTenths,1
+Function roundToTenths(inVal)
+   
+   if (((inVal*10)%1) >= 0.5000)
+      return (Floor(inVal*10)/10 + 0.1)
+   else
+      return (Floor(inVal*10)/10)
+   endif
+
+ENDIO
+
+E,OnLoad
+// upon loading device
+
+reset()
+print("Finished loading device")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnUnload
+
+print("Unloading device...")
+
+
+
+
+
+
+ENDIO
+
+E,OnReceive
+
+If (isStreaming)
+   If (strIn == Chr(10))   // upon receiving line feed \010
+      parseLI7500data()
+   endif
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnSend
+
+
+// DELETED CODE WHICH WAS MYSTERIOUSLY 
+// COPIED FROM THE onReceive FUNCTION
+//
+// THIS "UNKNOWINGLY COPY CODE FROM 
+// onReceive TO onSend" IS AN ISSUE
+// EXPERIENCED IN DAQFACTORY AS OF
+// AUGUST 2010 - IT MAY HAVE BEEN FIXED
+// BY NOW, POSSIBLY, MAYBE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+

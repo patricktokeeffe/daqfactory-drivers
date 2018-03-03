@@ -1,0 +1,3282 @@
+U,CPC_3775
+I,Raw counts,0,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Corr. counts,1,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Conc. (p/cc),2,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Aerosol flow (cc/min),3,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Inlet flow (L/min),4,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Analog In 1 (V),5,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Analog In 2 (V),6,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Saturator temp (C),7,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Condensor temp (C),8,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Optics temp (C),9,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Baro. press (kPa),10,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Inlet press (kPa),11,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Orifice press (kPa),12,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Laser current (mA),13,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Liquid level,14,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Fill state,15,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Photometric (V),16,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Diagnostic word,17,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Deadtime (sec),18,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Deadtime corr.,19,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Elapse time (sec),20,input,numeric
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Status,21,input,string
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,Poll,1
+function Poll(string out, numBytes)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   // lock the port
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   // clear anything pending
+   Purge()
+   // output our string
+   Write(out)
+   // and read until the eol:
+   in = Read(numBytes) 
+   // release the port
+   UnlockPort()
+   // and return the response
+   return(in)
+catch()
+   // error occured
+   UnlockPort()
+   throw()
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,PollUntil,1
+function PollUntil(string out, until)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   // lock the port
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   // clear anything pending
+   Purge()
+   // output our string
+   Write(out)
+   // and read until the eol:
+   in = ReadUntil(until) 
+   // release the port
+   UnlockPort()
+   // and return the response
+   return(in)
+catch()
+   // error occured
+   UnlockPort()
+   throw()
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RFV,0
+// Read firmware version #
+//
+// send RFV
+// returns X.X.X where X=0-9
+
+try
+   return ( HideHidden(PollUntil("RFV"+Chr(13),13)) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RSF,0
+// read aerosol flow rate in cc/min
+//
+// send RSF
+// returns FP# from 0.0 to 9999.9
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RSF"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RIF,0
+// read inlet flow rate setting in L/min
+//
+// send RIF
+// returns FP# from 0.0 to 9999.9
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RIF"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RTS,0
+// read saturator temp in degC
+//
+// send RTS
+// receive FP# from 0.0 to 50.0
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RTS"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RTC,0
+// read condensor temp in degC
+//
+// send RTC
+// receive FP# from 0.0 to 50.0
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RTC"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RTO,0
+// read optics temp in degC
+//
+// send RTO
+// receive FP# from 0.0 to 50.0
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RTO"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RTA,0
+// read cabinet temperature
+//
+// send RTA
+// receive FP# from 0.0 to 50.0
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RTA"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RCT,0
+// read current time
+//
+// send RCT
+// receive Www Mmm dd hh:mm:ss yyyy
+//    where Www weekday
+//          Mmm month in letters
+//          dd  day of the month
+//          hh:mm:ss    time
+//          yyyy        year
+
+try
+   return ( HideHidden(PollUntil("RCT"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RIE,0
+// read instrument errors
+//
+// send RIE
+// receive 16bit integer in hexadecimal format
+// bits set high are in error
+//    0x0001   Saturator temp
+//    0x0002   Condensor temp
+//    0x0004   Optics temp
+//    0x0008   Inlet flow rate
+//    0x0010   Aerosol flow rate
+//    0x0020   Laser power
+//    0x0040   Liquid level
+//    0x0080   Concentration
+//    ...remaining unused...
+
+try
+   private string word = PollUntil("RIE"+Chr(13),13)
+   private outVal
+
+   Execute("outVal = From.Bit(To.Bit(0x"+HideHidden(word)+",8))")
+
+   return (outVal)
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RPA,0
+// read abs. pressure trans. in kPa
+//
+// send RPA
+// receive FP# from 15.0 to 115.0
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RPA"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RPO,0
+// read orifice trans. pressure in kPa
+//
+// send RPO
+// receive FP# from 0.0 to 99.9
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RPO"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RPN,0
+// read nozzle pressure in kPa
+//
+// send RPN
+// receive FP# from 0.000 to 10.000
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RPN"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RPS,0
+// read aerosol pressure trans in kPa
+//
+// send RPS
+// receive FP# from 0.000 to 1.000
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RPS"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RSN,0
+// reads serial number
+//
+// send RSN
+// receive string up to 20 characters
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RSN"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RAI,0
+// read analog input voltages
+//
+// send RAI
+// receive X,Y where both X&Y are FP# 0.00 to 10.00
+
+try
+   private string inStr = Parse(HideHidden(PollUntil("RAI"+Chr(13),13)),-1,",")
+   private outNum[1] = StrToDouble(inStr[1])
+   private outNum[0] = StrToDouble(inStr[0])
+   return (outNum)
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RALL,0
+// read a set of current values
+// 
+// send RALL
+// receive  concentration,
+//          instrument errors,
+//          saturation temp,
+//          condensor temp,
+//          optics temp,
+//          cabinet temp,
+//          ambient pressure,
+//          orifice pressure,
+//          nozzle pressure,
+//          laser current,
+//          liquid level
+
+try
+private string inStr = Parse(HideHidden(PollUntil("RALL"+Chr(13),13)),-1,",") // split values
+private outNums[11] = StrToDouble(Remove(Right(inStr[10],5),")"))    // numeric liquid level
+        outNums[10] = !(Find(inStr[10],"NOT",0)+1)   // boolean liquid level
+           // if "NOT" missing, Find=-1 so !(Find+1=0) = !NOTFULL = FULL
+        outNums[9]  = StrToDouble(inStr[9])          // laser current
+        outNums[8]  = StrToDouble(inStr[8])          // nozzle pressure
+        outNums[7]  = StrToDouble(inStr[7])          // orifice pressure
+        outNums[6]  = StrToDouble(inStr[6])          // ambient pressure
+        outNums[5]  = StrToDouble(inStr[5])          // cabinet temp
+        outNums[4]  = StrToDouble(inStr[4])          // optics temp
+        outNums[3]  = StrToDouble(inStr[3])          // condensor temp
+        outNums[2]  = StrToDouble(inStr[2])          // saturation temp
+	  Execute("outNums[1] = From.Bit(To.Bit(0x"+inStr[1]+",8)")  // instrument errors
+        outNums[0]  = StrToDouble(inStr[0])          // concentration
+   return (outNums)
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RLP,0
+// read laser current in mA
+//
+// send RLP
+// receive an integer from 0 to 150
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RLP"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RLL,0
+// reads the liquid level
+//
+// send RLL
+// receive FULL or NOTFULL and corresponding
+// ADC reading from 0 to 4095
+
+try
+   private string inStr = PollUntil("RLL"+Chr(13),13)
+   private outNum[1] = StrToDouble(Remove(Right(inStr,5),")"))	// numeric liquid level 0-4095
+           outNum[0] = !(Find(inStr,"NOT",0)+1)                // boolean 0=NOTFULL, 1=FULL
+   return (outNum)
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RMN,0
+// read the model number
+//
+// send RMN
+// receive 3771,3772,3775,3776,3790 or 100
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RMN"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,R0,0
+// legacy command to read liquid level
+//
+// send R0
+// receive FULL or NOTFULL
+
+try
+   return ( !(Find(PollUntil("R0"+Chr(13),13,"NOT",0)+1)    // boolean 0=NOTFULL, 1=FULL
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,R1,0
+// legacy command to read condensor temp in degC
+//
+// send R1
+// receive FP#
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("R1"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,R2,0
+// legacy command to read saturator temp in degC
+//
+// send R2
+// receive FP#
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("R2"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,R3,0
+// legacy command to read optics temp in degC
+//
+// send R3
+// receive FP#
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("R3"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,R5,0
+// legacy command to read instrument status
+//
+// send R5
+// receive READY or NOTREADY
+
+try
+   return ( !(Find(PollUntil("R5"+Chr(13),13),"NOT",0)+1)    // boolean 0=NOTREADY, 1=READY
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,R7,0
+// legacy command to read photometric voltage (3775 only!)
+// 
+// send R7
+// receive 0.000-2.500 volts
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("R7"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RD,0
+// legacy command to read conc. in p/cc
+//
+// send RD
+// receive FP#
+
+try
+   return ( StrToDouble(HideHidden(PollUntil("RD"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,RV,0
+// read the version string
+//
+// send RV
+// receive string
+
+try
+   return ( HideHidden(PollUntil("RV"+Chr(13),13))) )
+catch
+   return (-1)
+endcatch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SAV,0
+// set analog output full scale voltage
+//
+// send SAV,#
+// where #= 1 0-1v
+//          2 0-2v
+//          3 0-5v
+//          4 0-10v  (default)
+
+Function SAV()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SAV"+Chr(13),13))) )
+   elseif (argc>1)
+      throw ("CPC Too many arguments supplied to SAV()")
+   endif
+   
+   private arg0 = Floor(arg0)     // remove fractions
+   arg0 = iif(arg0<1,4,arg0)      // check LO bounds
+   arg0 = iif(arg0>4,4,arg0)      // check HI bounds
+   
+   try
+      private string ack = HideHidden(PollUntil("SAV,"+arg0+Chr(13),13))
+   catch
+      return(-1)
+   endcatch
+
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SSTART,0
+// start a new sample
+// 
+// send SSTART,#
+// where #= 0  stop
+//          1  start, data type 1
+//          2  start, data type 2
+
+Function SSTART(code)
+   
+   if (argc != 1)
+      Throw("CPC Invalid # of parameters passed to SSTART()")
+   endif
+
+   try
+      
+   private string ack
+   switch
+      case (code==0)
+         print("Stopping datastream")   // update
+         isStreaming = 0            // stop parsing 1st thing
+         ack = HideHidden(PollUntil("SSTART,0"+Chr(13),13))
+      case (code==1)
+         // data type 1
+         // UX,D,D,D,D,D,D,D,D,D,D,C,C,C,C,C,C,C,C,C,C,AN1,AN2,RIE
+         //    UX    elasped time (sec), integer
+         //    D     tenth sec corrected counts, integer
+         //    C     tenth sec concentration, float
+         //    AN1   analog input 1, float
+         //    AN2   analog input 2, float
+         //    RIE   refer to RIE command
+         if (isStreaming)
+            return(-1)
+         endif
+         print("Starting datastream type 1...") // update
+         //waitUntil(Floor(SysTime())+0.650)     // typ. 350ms delay b4 data
+         ack = HideHidden(PollUntil("SSTART,1"+Chr(13),13))
+      case (code==2)
+         // data type 2 (3771/72/75)
+         // UX,C,C,C,C,C,C,C,C,C,C,R,R,R,R,R,R,R,R,R,R,F,DTC,T,T,T,T,T,T,T,T,T,T
+         //    UX    elapsed time (sec), integer
+         //    C     tenth sec concentration, float
+         //    R     tenth sec raw counts, integer
+         //    F     flowrate (cc/sec), float
+         //    DTC   deadtime correction, float
+         //    T     tenth sec deadtime (sec), float
+         //
+         // data type 2 (3776) NOT USED HERE. IT'S A CPC 3775 PROTOCOL
+         // UX,C,C,C,C,C,C,C,C,C,C,R,R,R,R,R,R,R,R,R,R,F,F,F,F,F,F,F,F,F,F,T,T,T,T,T,T,T,T,T,T
+         //    UX    elaspsed time (sec), integer
+         //    C     tenth sec concentration, float
+         //    R     tenth sec raw counts, integer
+         //     F     flowrate (cc/0.1sec), float
+         //    T     tenth sec deadtime (sec), float
+         if (isStreaming)
+            return(-1)
+         endif
+         print("Starting datastream type 2...")
+         ack = HideHidden(PollUntil("SSTART,2"+Chr(13),13))
+      default
+         throw("CPC Invalid parameter value passed to SSTART()")
+   endcase
+
+   catch("C1136")
+      isStreaming = 0
+      Local.Channel.AddValue(strDevice,0,"Status",0,"Device timed out sending SSTART()")
+      return(-1)
+   endcatch
+
+   switch
+      case (ack=="OK")
+         dataType = code            // update flag
+         isStreaming = (code > 0)   // boolean math
+         return (0)     
+      case (ack=="ERROR")
+         return (-1)
+      default
+         return (NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SCM,0
+// set the operating mode
+//
+// send SCM,#
+// where #= 0  Concentration
+//          1  Totalizer
+//          2  SMPS
+
+Function SCM()
+   if(argc==0)
+      return ( PollUntil("SCM"+Chr(13),13) )
+   elseif(argc>1)
+      throw("CPC Incorrect # of arguments passed to SCM()")
+   endif
+   
+   private string ack
+   switch
+      case (arg0=0)
+         ack = HideHidden(PollUntil("SCM,0"+Chr(13),13))
+      case (arg0=1)
+         ack = HideHidden(PollUntil("SCM,1"+Chr(13),13))
+      case (arg0=2)
+         ack = HideHidden(PollUntil("SCM,2"+Chr(13),13))
+      default
+         throw("CPC Incorrect parameter value passed to SCM()")
+   endcase
+
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,STS,0
+// set saturator temperature
+//
+// send STS,#
+// where #= 0.0 to 50.0 (degC)
+//
+
+Function STS()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("STS"+Chr(13),13))) )
+   elseif(argc>1)
+      throw("CPC Invalid # of parameters passed to STS()")
+   endif
+   
+   arg0 = Floor(arg0*10)/10	        // trim to tenths place
+   arg0 = iif(arg0<0.0,0.0,arg0)      // check LO bounds
+   arg0 = iif(arg0>50.0,50.0,arg0)    // check HI bounds
+
+   private string ack = HideHidden(PollUntil("STS,"+arg0+Chr(13),13))
+   switch 
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,STC,0
+// set condensor temperature
+//
+// send STC,#
+// where #= 0.0 to 50.0 (degC)
+//
+
+Function STC()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("STC"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to STC()")
+   endif
+   
+   arg0 = Floor(arg0*10)/10         // round to tenths
+   arg0 = iif(arg0<0.0,0,arg0)      // low bound check
+   arg0 = iif(arg0>50.0,50.0,arg0)  // hi bound check
+   
+   private string ack = HideHidden(PollUntil("STC,"+arg0+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,STO,0
+// set optics temperature
+//
+// send STO,#
+// where #= 0.0 to 50.0 (degC)
+//
+
+Function STO() 
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("STO"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to STO()")
+   endif
+   
+   arg0 = Floor(arg0*10)/10         // round 10ths
+   arg0 = iif(arg0<0.0,0.0,arg0)    // lo bounds
+   arg0 = iif(arg0>50.0,50.0,arg0)  // hi bounds
+   
+   private string ack = HideHidden(PollUntil("STO,"+arg0+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SAWR,0
+// sets auto water removal function ON/OFF
+//
+// send SAWR,#
+// where #= 0  off
+//          1  on    
+
+Function SAWR(flag)
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SAWR"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SAWR()")
+   endif
+
+   private string ack
+   switch
+      case (flag==0)   
+         ack = HideHidden(PollUntil("STO,0"+Chr(13),13))
+      case (flag==1)
+         ack = HideHidden(PollUntil("STO,1"+Chr(13),13))
+      default
+         Throw("CPC Invalid flag passed to SAWR()")
+   endcase
+
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SVO,0
+// sets analog voltage output
+//
+// send SVO,#
+// where #= 0.000-10.000
+
+Function SVO()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SVO"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SVO()")
+   endif
+   
+   arg0 = Floor(arg0*1000)/1000         // round 1000ths
+   arg0 = iif(arg0<0.000,0.000,arg0)    // lo bounds
+   arg0 = iif(arg0>10.000,10.000,arg0)  // hi bounds
+   
+   private string ack = HideHidden(PollUntil("SVO,"+arg0+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SAO,0
+// sets analog output voltage proportional to conc. 0-10V
+//
+// send SAO,#
+// where #= 0  off
+//          1  1E1 conc reading = 10V
+//          2  1E2 ...
+//          3  1E3 ...
+//          4  1E4
+//          5  1E5 (CPC100 only)
+// ???? Our 3776 responded with "6" ????
+
+Function SAO()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SAO"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SAO()")
+   endif
+   
+   private string ack
+   switch
+      case (arg0==0)
+         ack = HideHidden(PollUntil("SAO,0"+Chr(13),13))
+      case (arg0==1)
+         ack = HideHidden(PollUntil("SAO,1"+Chr(13),13))
+      case (arg0==2)
+         ack = HideHidden(PollUntil("SAO,2"+Chr(13),13))
+      case (arg0==3)
+         ack = HideHidden(PollUntil("SAO,3"+Chr(13),13))
+      case (arg0==4)
+         ack = HideHidden(PollUntil("SAO,4"+Chr(13),13))
+      //case (arg0=5)    // CPC100 only!
+      //   ack = HideHidden(PollUntil("SAO,5"+Chr(13),13))
+      default
+         throw("CPC Invalid parameter value passed to SAO()")
+   endcase
+
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SCOM,0
+// setup auxiliary comport
+//
+// send SCOM,#,#,#,#,#
+// where #= port 1, 2, 3
+//       #= baud 2400, 4800, 9600, 14400, 19200
+//               28800, 38400, 57600, 115200
+//       #= bits 5, 6, 7, 8
+//       #= parity E, O, N
+//       #= stop 1, 1.5, 2
+
+Function SCOM(port,baud,bits,string parity,stop)
+   if (argc != 5)
+      throw("CPC Invalid # of parameters passed to SCOM()")
+   endif
+
+   private string strPort
+   private string strBaud
+   private string strBits
+   // parity already passed as string
+   private string strStop   
+
+   switch
+      case (port==1)
+         strPort = "1,"
+      case (port==1)
+         strPort = "2,"
+      case (port==3)
+         strPort = "3,"
+      default
+         throw("CPC Invalid parameter value (port) passed to SCOM()")
+   endcase
+   
+   switch
+      case (baud==2400)
+         strBaud = "2400,"
+      case (baud==4800)
+         strBaud = "4800,"
+      case (baud==9600)
+         strBaud = "9600,"
+      case (baud==14400)
+         strBaud = "14400,"
+      case (baud==19200)
+         strBaud = "19200,"
+      case (baud==28800)
+         strBaud = "28800,"
+      case (baud==38400)
+         strBaud = "38400,"
+      case (baud==57600)
+         strBaud = "57600,"
+      case (baud==115200)
+         strBaud = "115200,"
+      default
+         throw("CPC Invalid parameter value (baud) passed to SCOM()")
+   endcase
+
+   switch
+      case (bits==5)
+         strBits = "5,"
+      case (bits==6)
+         strBits = "6,"
+      case (bits==7)
+         strBits = "7,"
+      case (bits==8)
+         strBits = "8,"
+      default
+         throw("CPC Invalid parameter value (data bits) passed to SCOM()")
+   endcase
+
+   parity = MakeUpper(parity)+","
+   if ( !(parity=="E," || parity=="O," || parity=="N,") )
+      throw("CPC Invalid parameter value (parity) passed to SCOM()")
+   endif
+
+   switch
+      case (stop==1)
+         strStop = "1,"
+      case (stop==1.5)
+         strStop = "1.5,"
+      case (stop==2)
+         strStop = "2,"
+      default
+         throw("CPC Invalid parameter (stop bits) passed to SCOM()")
+   endcase
+   
+   private string ack = HideHidden(PollUntil("SCOM,"+port+baud+bits+parity+stop+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SHOUR,0
+// set the realtime clock hours (24hr mode)
+//
+// send SHOUR,#
+// where #= hour 0-23
+
+Function SHOUR()
+   if (argc==0)
+      return ( HideHidden(PollUntil("SHOUR"+Chr(13),Chr(13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SHOUR()")
+   endif
+   
+   if ((arg0<0) || (arg0>23))
+      throw("CPC Parameter out of range - SHOUR()")
+   endif
+   
+   private string ack = PollUntil("SHOUR,"+Format("%u",arg0)+Chr(13),13)
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SMINUTE,0
+// set the realtime clock minutes
+//
+// send SMINUTE,#
+// where #= minutes 00-59
+
+Function SMINUTE()
+   if (arg==0)
+      return ( HideHidden(PollUntil("SMINUTE"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SMINUTE()")
+   endif
+   
+   if ((minute<0) || (minute>59))
+      throw("CPC Parameter out of range - SMINUTE()")
+   endif
+   
+   private string ack = PollUntil("SMINUTE,"+Format("%u",arg0)+Chr(13),13)
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SSECOND,0
+// set the realtime clock seconds
+//
+// send SSECOND,#
+// where #= seconds 0-59
+
+Function SSECOND()
+   if (argc==0)
+      return ( HideHidden(PollUntil("SSECOND"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SSECOND()")
+   endif
+   
+   if ((arg0<0) || (arg0>59))
+      throw("CPC Parameter out of range - SSECOND()")
+   endif
+
+   private string ack = PollUntil("SSECOND,"+Format("%u",arg0)+Chr(13),13)
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SYEAR,0
+// set the realtime clock year
+//
+// send SYEAR,#
+// where #= year 00-99
+
+Function SYEAR()
+   if (argc==0)
+      return ( HideHidden(PollUntil("SYEAR"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SYEAR()")
+   endif
+   
+   if ((arg0<0) || (arg0>99))
+      throw("CPC Parameter out of range - SYEAR()")
+   endif
+   
+   private string ack = PollUntil("SYEAR,"+Format("%u",arg0)+Chr(13),13)
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SDAY,0
+// set the realtime clock day
+//
+// send SDAY,#
+// where #= day 00-31
+
+Function SDAY()
+   if (argc==0)
+      return ( HideHidden(PollUntil("SDAY"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SDAY()")
+   endif
+
+   if ((arg0<0) || (arg0>31))
+      throw("CPC Parameter out of range - SDAY()")
+   endif
+   
+   private string ack = PollUntil("SDAY,"+Format("%u",arg0)+Chr(13),13)
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SMONTH,0
+// set the realtime clock month
+//
+// send SMONTH,#
+// where #= month 01-12
+
+Function SMONTH(month)
+   if (argc==0)
+      return ( HideHidden(PollUntil("SMONTH"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SMONTH()")
+   endif
+   
+   if ((arg0<1) || (arg0>12))
+      throw("CPC Parameter out of range - SMONTH()")
+   endif
+   
+   private string ack = PollUntil("SMONTH,"+Format("%u",arg0)+Chr(13),13)
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SFILL,0
+// turn on/off autofill
+// 
+// send SFILL,#
+// where #= 0  off
+//          1  on
+
+Function SFILL()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SFILL"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Incorrect # of parameters passed to SFILL()")
+   endif
+   
+   private string ack
+   switch
+      case (flag=0)
+         ack = HideHidden(PollUntil("SFILL,0"+Chr(13),13))
+      case (flag=1)
+         ack = HideHidden(PollUntil("SFILL,1"+Chr(13),13))
+      default
+         throw("CPC Invalid parameter value passed to SFILL()")
+   endcase
+   
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SDRAIN,0
+// turn drain on/off (3771 only)
+//
+// send SDRAIN,#
+// where #= 0  off
+//          1  on
+
+Function SDRAIN()
+   if(argc>0)
+      throw("CPC 3775 can only read using SDRAIN() - no arguments are used")
+   endif
+   
+   return ( StrToDouble(HideHidden(PollUntil("SDRAIN"+Chr(13),13))) )   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SCC,0
+// turn coincidence correction on/off (3772, 3771 only)
+//
+// send SCC,#
+// where #= 0  off
+//          1  on
+
+Function SCC()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SCC"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Invalid # of parameters passed to SCC()")
+   endif
+
+   private string ack
+   switch
+      case (arg0==0)
+         ack = HideHidden(PollUntil("SCC,0"+Chr(13),13))
+      case (arg0==1)
+         ack = HideHidden(PollUntil("SCC,1"+Chr(13),13))
+      default
+         throw("CPC Invalid parameter value passed to SCC()")
+   endcase
+
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,SAF,0
+// set the aerosol flow rate in cc/min (3775 only)
+// 
+// send SAF,#
+// where #= 200-400 (cc/min)
+
+Function SAF()
+   if (argc==0)
+      return ( StrToDouble(HideHidden(PollUntil("SAF"+Chr(13),13))) )
+   elseif (argc>1)
+      throw("CPC Incorrect # of parameters passed to SAF()")
+   endi
+   
+   arg0 = iif(arg0<200,200,arg0)
+   arg0 = iif(arg0>400,400,arg0)
+   
+   private string ack = HideHidden(PollUntil("SAF,"+Format("%u",arg0)+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,ZB,0
+// begin SMPS scan based on ZT, ZV, ZU params (except 3771)
+//
+// send ZB
+
+Function ZB()
+   if (argc>0)
+      throw("CPC No arguments are available with ZB()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("ZB"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,ZE,0
+// end SMPS scan (except 3771)
+//
+// send ZE
+
+Function ZE()
+   if (argc>0)
+      throw("CPC No arguments are available with ZE()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("ZE"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,ZT,0
+// set scan time in tenth sec increments (except 3771)
+//
+// send Z#,#,#
+// note: this cmd does not need comma btwn cmd & 1st param
+// where #= delay 0-255 (0-25.5sec)
+//       #= up 10-6000 (1-600sec)
+//       #= dn 10-6000 (1-600sec)
+
+Function ZT(delay,up,dn)
+   if(argc != 3)
+      throw("CPC Invalid # of parameters provided to ZT()")
+   endif
+
+   delay = iif(delay<0,0,delay)
+   delay = iif(delay>255,255,delay)
+   up = iif(up<10,10,up)
+   up = iif(up>6000,6000,up)
+   dn = iif(dn<10,10,dn)
+   dn = iif(dn>6000,6000,dn)
+
+   private string poll = "ZT"+Format("%u,",delay)+Format("%u,",up)+Format("%u",dn)+Chr(13)
+   private string ack = HideHidden(PollUntil(poll,13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,ZU,0
+// scan using up direction instead of down (except 3771)
+//
+// send ZU
+
+Function ZU()
+   if(argc>0) 
+      throw("CPC No arguments are used with ZU()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("ZU"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,ZV,0
+// sets the scan voltages (except 3771)
+//
+// send ZV#,#
+// note: this cmd does not need a comma btwn cmd & 1st param
+// where #= start 10-10000 V
+//       #= end   10-10000 V
+
+Function ZV(start,end)
+   if (argc != 2)
+      throw("CPC No arguments are used with ZV()")
+   endif
+
+   start = iif(start<10,10,start)
+   start = iif(start>10000,10000,start)
+   end = iif(end<10,10,end)
+   end = iif(end>10000,10000,end)
+
+   private string poll = "ZV"+Format("%u,",start)+Format("%u",end)+Chr(13)
+   private string ack = HideHidden(PollUntil(poll,13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,COM2,0
+// used to denote data to pass to COM2
+//
+// Example: COM2:RFV ("RFV" is Tx to COM2)
+//
+
+Function COM2(string msg)
+   if(argc != 1)
+      throw("CPC Invalid # of parameters passed to COM2()")
+   endif
+   
+   Poll("COM2:"+msg,0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,X2,0
+// legacy command to turn pump off
+//
+// send X2
+
+Function X2()
+   if (argc>0)
+      throw("CPC No arguments are used with X2()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("X2"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,X3,0
+// legacy command to turn pump on
+//
+// send X3
+
+Function X3()
+   if (argc>0)
+      throw("CPC No arguments are used with X3()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("X3"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,X7,0
+// legacy command to set the inlet flow to 0.3 L/min
+// (3775, 3776 only)
+//
+// send X7
+
+Function X7()
+   if (argc>0)
+      throw("CPC No arguments are used with X7()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("X7"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,X8,0
+// legacy command to set inlet flow to 1.5 L/min
+// (3775, 3776 only)
+//
+// send X8
+
+Function X8()
+   if (argc>0)
+      throw("CPC No arguments are used with X8()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("X8"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,D,0
+// legacy command to read accumulative time (sec) and 
+// accumulative counts since this command was sent
+//
+// send D
+
+Function D()
+   if (argc>0)
+      throw("CPC No arguments are used with D()")
+   endif
+   
+   private string ack = HideHidden(PollUntil("D"+Chr(13),13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,CAL3775,0
+// set the photometric calibration table (3775 only)
+//
+// send CAL3775,#,#
+// where #= photometric voltage (in volts*10)
+//       #= concentration in p/cc
+//
+// example: CAL3775,101,2.03e5 results in
+//    photometric voltage of 1.01 V = 2.03e5 p/cc
+
+Function CAL3775(volt,conc)
+   if (argc != 2)
+      throw("CPC Invalid # of arguments passed to CAL3775()")
+   endif
+
+   // don't know the genuine boundaries
+   // skip boundary checking
+
+   private string poll = "CAL3775,"+Format("%u,",volt)+Format("%e",conc)+Chr(13)
+   private string ack = HideHidden(PollUntil(poll,13))
+   switch
+      case (ack=="OK")
+         return(0)
+      case (ack=="ERROR")
+         return(-1)
+      default
+         return(NULL)
+   endcase
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,nowTimeString,0
+// returns nicely formatted string with device name & semicolon
+
+Function nowTimeString()
+
+return ()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,reset,0
+// does initialization & variable creation
+
+local isStreaming = 0   // not expecting data @ startup
+local dataType = 0      // default to no type
+
+print("Initializing device...")
+
+
+
+
+
+
+
+
+ENDIO
+
+F,parseCPCdata,1
+// splits up incoming data strings
+
+Function parseCPCdata()
+   private string inStr = Remove(ReadUntil(13),Chr(13))
+
+   switch
+      case (inStr=="OK")
+         // oops, reading acks, pause data parsing
+         SSTART(0)   // attempt to stop streaming
+         print("Tried to parse a CPC 'OK' ack... Check for problems!")
+      case (inStr=="ERROR")
+         SSTART(0)   // shut things down
+         print("Tried to parse a CPC 'ERROR' ack... Check for problems!")
+      case (dataType==0)
+         SSTART(0)   // how could this have happened?
+         isStreaming = 0
+         print("Tried to parse data but dataType=0; unknown parse format")         
+      case (dataType==1)
+         private string splitStr = Parse(inStr,-1,",")
+         
+         private timerVal = StrToDouble(Remove(splitStr[0],"U"))
+         // round down to last tenth of a second  
+         //timerVal.Time = Floor(timerVal.Time*10)/10 
+         // round down to start of previous full second
+         //timerVal.Time = Floor(timerVal.Time)-1 
+         // round to nearest tenth
+         //timerVal.Time = roundToTenths(timerVal.Time)
+         
+         private cntVals[9,0] = InsertTime(StrToDouble(splitStr[10,1]),timerVal.Time,0.1)
+            // +0.1 -> splitStr[10] saved most recent
+            // -0.1 -> splitStr[10] saved as oldest
+         private concVals[9,0] = InsertTime(StrToDouble(splitStr[20,11]),timerVal.Time,0.1)
+            // +0.1 -> splitStr[20] saved most recent
+            // -0.1 -> splitStr[20] saved as oldest          
+         private analog1 = StrToDouble(splitStr[22]) // 21
+         private analog2 = StrToDouble(splitStr[23]) // 22
+         private diagWord                            // 23
+         Execute("diagWord = From.Bit(To.Bit(0x00"+splitStr[24]+",8))")
+         
+         Local.Channel.AddValue(strDevice,0,"Elapse time (sec)",0,InsertTime(timerVal,timerVal.Time,0))
+         for (Private.i=0, i<10, i++)
+            Local.Channel.AddValue(strDevice,0,"Corr. counts",0,cntVals[i])
+         endfor
+         for (Private.i=0, i<10, i++)
+            Local.Channel.AddValue(strDevice,0,"Conc. (p/cc)",0,concVals[i])
+         endfor
+         Local.Channel.AddValue(strDevice,0,"Analog In 1 (V)",0,InsertTime(analog1,timerVal.Time,0))
+         Local.Channel.AddValue(strDevice,0,"Analog In 2 (V)",0,InsertTime(analog2,timerVal.Time,0))
+         Local.Channel.AddValue(strDevice,0,"Diagnostic word",0,InsertTime(diagWord,timerVal.Time,0))
+      case (dataType==2)
+         // NEED TO WRITE THIS PART
+         print("parsing for data type 2 not created yet")
+      default
+         print("CPC unidentified error interrupting parseData()")
+   endcase
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,print,0
+
+Function print(string inStr)
+   
+   if (argc != 1)
+      throw("CPC Invalid # of parameters passed to print()")
+   endif
+   
+   Local.Channel.AddValue(strDevice,0,"Status",0,FormatDateTime("%m/%d/%Y %H:%M:%S",SysTime())+" "+strDevice+": "+inStr)
+
+
+
+
+
+
+
+
+ENDIO
+
+F,roundToTenths,1
+Function roundToTenths(inVal)
+   
+   if (((inVal*10)%1) >= 0.5000)
+      return (Floor(inVal*10)/10 + 0.1)
+   else
+      return (Floor(inVal*10)/10)
+   endif
+
+ENDIO
+
+E,OnLoad
+// upon loading device
+//
+
+reset()
+print("Finished loading device.")
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnUnload
+
+print("Unloading device...")
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnReceive
+// with every character received
+
+if (isStreaming)
+   if (strIn == Chr(13))
+      //? ShowHidden(ReadUntil(13))
+      parseCPCdata()
+   endif
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnSend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
