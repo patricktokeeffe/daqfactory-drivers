@@ -40,6 +40,11 @@ For model LI-7500 open-path infrared CO2/H2O analyzer (IRGA).
 Developed for Model 3775 Condensation Particle Counter (CPC) by TSI.
 
 
+### Vaisala WXT510 weather station
+
+For the WXT510 compact total weather station by Vaisala.
+
+
 
 ## License
 

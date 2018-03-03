@@ -1,0 +1,1222 @@
+U,WXT510
+I,Wind speed min,0,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Wind speed avg,1,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Wind speed max,2,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Wind dir min,3,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Wind dir avg,4,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Wind dir max,5,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Air press,6,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Air temp,7,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Internal temp,8,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Relative humidity,9,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Rain accumulation,10,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Rain duration,11,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Rain intensity,12,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Rain peak intensity,13,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Hail accumulation,14,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Hail intensity,15,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Hail duration,16,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Hail peak intensity,17,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Heating temp,18,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Heating voltage,19,input,string
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Supply voltage,20,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Ref voltage,21,input,numeric
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Status,22,input,string
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+I,POLL wind spd/dir,23,input,numeric
+// Controls timing of wind message acquisition
+
+If (!inPollMode) 
+   System.ErrorMessage(strDevice+": Attempting to poll wind message while in automatic-listening mode.")
+   return NULL 
+endif
+
+If (includeCRC)
+   private string data = HideHidden(PollUntil(addCRC(address+"r1")+CRLF,10))
+   data = Left(data,GetLength(data)-3)
+else
+   private string data = HideHidden(PollUntil(address+"R1"+CRLF,10))
+endif
+parseWXTdata(data, data.Time)
+
+
+
+
+
+
+
+ENDIO
+
+I,POLL press/temp/rh,24,input,numeric
+// Controls timing of press/temp/RH message acquisition
+
+If (!inPollMode)
+   System.ErrorMessage(strDevice+": Attempting to poll press/temp/RH message while in automatic-listening mode.")
+   return NULL
+endif
+
+If (includeCRC)
+   private string data = HideHidden(PollUntil(addCRC(address+"r2")+CRLF,10))
+   data = Left(data,GetLength(data)-3)
+else
+   private string data = HideHidden(PollUntil(address+"R2"+CRLF,10))
+endif
+parseWXTdata(data, data.Time)
+
+
+
+
+
+
+
+ENDIO
+
+I,POLL rain/hail,25,input,numeric
+// Controls timing of precipitation acquisition
+
+If (!inPollMode)
+   System.ErrorMessage(strDevice+": Attempting to poll rain/hail message while in automatic-listening mode.")
+   return NULL
+endif
+
+If (includeCRC)
+   private string data = HideHidden(PollUntil(addCRC(address+"r3")+CRLF),10))
+   data = Left(data,GetLength(data)-3)
+else
+   private string data = HideHidden(PollUntil(address+"R3"+CRLF),10))
+endif
+parseWXTdata(data, data.Time)
+
+
+
+
+
+
+
+ENDIO
+
+I,POLL diagnostics,26,input,numeric
+// Controls timing of diagnostic message acquisition
+
+If (!inPollMode)
+   System.ErrorMessage(strDevice+": Attempting to poll diagnostics message while in automatic-listening mode.")
+   return NULL
+endif
+
+If (includeCRC)
+   private string data = HideHidden(PollUntil(addCRC(address+"r5")+CRLF,10))
+   data = Left(data,GetLength(data)-3)
+else
+   private string data = HideHidden(PollUntil(address+"R5"+CRLF,10))
+endif
+parseWXTdata(data, data.Time)
+
+
+
+
+
+
+
+ENDIO
+
+I,POLL combined,27,input,numeric
+// Controls timing of combined messages acquisition
+
+If (!inPollMode)
+   System.ErrorMessage(strDevice+": Attempting to poll combined messages while in automatic-listening mode.")
+   return NULL
+endif
+
+If (includeCRC)
+   private string data = HideHidden(PollUntil(addCRC(address+"r")+CRLF,10))
+   data = Left(data,GetLength(data)-3)
+else
+   private string data = HideHidden(PollUntil(address+"R"+CRLF,10))
+endif
+parseWXTdata(data, data.Time)
+
+
+
+
+
+
+
+ENDIO
+
+I,POLL composite,28,input,numeric
+// Controls timing of composite message acquisition
+
+If (!inPollMode)
+   System.ErrorMessage(strDevice+": Attempting to poll composite message while in automatic-listening mode.")
+   return NULL
+endif
+
+If (includeCRC)
+   private string data = HideHidden(PollUntil(addCRC(address+"r0")+CRLF,10))
+   data = Left(data,GetLength(data)-3)
+else
+   private string data = HideHidden(PollUntil(address+"R0"+CRLF,10))
+endif
+parseWXTdata(data, data.Time)
+
+
+
+
+
+
+
+ENDIO
+
+F,PollUntil,0
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+Function PollUntil(string out, until)
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   if (!LockPort())                 // if port failed to lock
+      throw("Unable to lock port")      // throw error
+   endif
+   Purge()                          // clear out buffer
+   Write(out)                       // send out cmd
+   in = ReadUntil(until)            // read until Chr(10)
+   UnlockPort()                     // release port
+   return(in)                       // return response
+catch()                          // if error happened
+   UnlockPort()                     // release com port first
+   throw()                          // then throw tantrum
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,parseWXTdata,0
+// Function parses data from the input string, applies timestamp
+// from stamp variable to resulting data and places values into
+// appropriate channels
+
+Function parseWXTdata(string data, stamp)
+   
+   if (!(Left(data,1)==address))
+      print("received data from device with different address!")
+      return NULL
+   endif
+   if (!CompareNoCase(Mid(data,1,1),"R"))
+      private string datums = Parse(data,-1,",")
+      private string header 
+      private string units
+      private val
+      
+      //? datums
+      for (Private.i=1, i<NumRows(datums), i++)
+         header = Left(datums[i],2)
+         units  = Right(datums[i],1)
+         val = StrToDouble(Mid(datums[i],3,GetLength(datums[i])-4))
+         val = InsertTime(val,stamp.Time,0)
+         //? "H: "+header+"    U: "+units+"    V: "+val
+         
+         switch
+         case (header=="Sn")                  // min wind speed
+            switch
+            case (units=="M") 
+               units_ws_min = "m/s"
+            case (units=="K")
+               units_ws_min = "km/h"
+            case (units=="S")
+               units_ws_min = "mph"
+            case (units=="N")
+               units_ws_min = "knots"
+            case (units=="#")
+               units_ws_min = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Wind speed min",0,val)
+            
+         case (header=="Sm")                  // avg wind speed
+            switch
+            case (units=="M") 
+               units_ws_avg = "m/s"
+            case (units=="K")
+               units_ws_avg = "km/h"
+            case (units=="S")
+               units_ws_avg = "mph"
+            case (units=="N")
+               units_ws_avg = "knots"
+            case (units=="#")
+               units_ws_avg = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Wind speed avg",0,val)
+            
+         case (header=="Sx")                  // max wind speed
+            switch
+            case (units=="M") 
+               units_ws_max = "m/s"
+            case (units=="K")
+               units_ws_max = "km/hr"
+            case (units=="S")
+               units_ws_max = "mph"
+            case (units=="N")
+               units_ws_max = "knots"
+            case (units=="#")
+               units_ws_max = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Wind speed max",0,val)
+            
+         case (header=="Dn")                  // min wind dir
+            switch
+            case (units=="D")
+               units_wd_min = "degrees"
+            case (units=="#")
+               units_wd_min = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Wind dir min",0,val)
+            
+         case (header=="Dm")                  // avg wind dir
+            switch
+            case (units=="D")
+               units_wd_avg = "degrees"
+            case (units=="#")
+               units_wd_avg = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Wind dir avg",0,val)
+            
+         case (header=="Dx")                  // max wind dir
+            switch
+            case (units=="D")
+               units_wd_max = "degrees"
+            case (units=="#")
+               units_wd_max = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Wind dir max",0,val)
+            
+         case (header=="Pa")                  // air press
+            switch
+            case (units=="H")
+               units_air_press = "hPa"
+            case (units=="P")
+               units_air_press = "Pa"
+            case (units=="B")
+               units_air_press = "bar"
+            case (units=="M")
+               units_air_press = "mmHg"
+            case (units=="I")
+               units_air_press = "inHg"
+            case (units=="#")
+               units_air_press = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Air press",0,val)
+            
+         case (header=="Ta")                  // air temp
+            switch
+            case (units=="C")
+               units_air_temp = "degC"
+            case (units=="F")
+               units_air_temp = "degF"
+            case (units=="#")
+               units_air_temp = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Air temp",0,val)
+            
+         case (header=="Tp")                  // internal temp
+            switch
+            case (units=="C")
+               units_int_temp = "degC"
+            case (units=="F")
+               units_int_temp = "degF"
+            case (units=="#")
+               units_int_temp = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Internal temp",0,val)
+            
+         case (header=="Ua")                  // rel. humidity
+            switch
+            case (units=="P")
+               units_rh = "%"
+            case (units=="#")
+               units_rh = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Relative humidity",0,val)
+            
+         case (header=="Rc")                  // rain accum.
+            switch
+            case (units=="M")
+               units_rain_acc = "mm"
+            case (units=="I")
+               units_rain_acc = "in"
+            case (units=="#")
+               units_rain_acc = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Rain accumulation",0,val)
+            
+         case (header=="Rd")                  // rain duration
+            switch
+            case (units=="S")
+               units_rain_dur = "sec"
+            case (units=="#")
+               units_rain_dur = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Rain duration",0,val)
+            
+         case (header=="Ri")                  // rain intensity
+            switch
+            case (units=="M")
+               units_rain_int = "mm/h"
+            case (units=="I")
+               units_rain_int = "in/h"
+            case (units=="#")
+               units_rain_int = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Rain intensity",0,val)
+            
+         case (header=="Rp")                  // rain peak intensity
+            switch
+            case (units=="M")
+               units_rain_peak_int = "mm/h"
+            case (units=="I")
+               units_rain_peak_int = "in/h"
+            case (units=="#")
+               units_rain_peak_int = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Rain peak intensity",0,val)
+            
+         case (header=="Hc")                  // hail accum.
+            switch
+            case (units=="M")
+               units_hail_acc = "hits/cm^2"
+            case (units=="I")
+               units_hail_acc = "hits/in^2"
+            case (units=="H")
+               units_hail_acc = "hits"
+            case (units=="#")
+               units_hail_acc = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Hail accumulation",0,val)
+            
+         case (header=="Hd")                  // hail duration
+            switch
+            case (units=="S")
+               units_hail_dur = "sec"
+            case (units=="#")
+               units_hail_dur = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Hail duration",0,val)
+            
+         case (header=="Hi")                  // hail intensity
+            switch
+            case (units=="M")
+               units_hail_int = "hits/cm^2*hr"
+            case (units=="I")
+               units_hail_int = "hits/in^2*hr"
+            case (units=="H")
+               units_hail_int = "hits/hr"
+            case (units=="#")
+               units_hail_int = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Hail intensity",0,val)
+            
+         case (header=="Hp")                  // hail peak intensity
+            switch
+            case (units=="M")
+               units_hail_peak_int = "hits/cm^2*hr"
+            case (units=="I")
+               units_hail_peak_int = "hits/in^2*hr"
+            case (units=="H")
+               units_hail_peak_int = "hits/hr"
+            case (units=="#")
+               units_hail_peak_int = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Hail peak intensity",0,val)
+            
+         case (header=="Th")                  // heat temp
+            switch
+            case (units=="C")
+               units_heat_temp = "degC"
+            case (units=="F")
+               units_heat_temp = "degF"
+            case (units=="#")
+               units_heat_temp = ""
+               val = NAN()
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Heating temp",0,val)
+            
+         case (header=="Vh")                  // heat voltage
+            switch
+            case (units=="N")
+               // heat available but disabled by user or the
+               // heating temp is > high control limit
+               units_heat_volt = "Disabled or temp > high limit"
+            case (units=="V")
+               // heating on @ 50% duty cycle and heat
+               // temp is between hi & mid control limits
+               units_heat_volt = "50% duty; mid limit < temp < high limit"
+            case (units=="W")
+               // heating on @ 100% duty cycle and heat
+               // temp is between low & mid control limits
+               units_heat_volt = "100% duty; low limit < temp < mid limit"
+            case (units=="F")
+               // heating on @ 50% duty cycle and temp
+               // is below low control limit
+               units_heat_volt = "50% duty; temp < low limit"
+            case (units=="#")
+               val = NAN()
+               units_heat_volt = "Heat not available"
+            endcase
+            Local.Channel.AddValue(strDevice,0,"Heating voltage",0,val)
+            
+         case (header=="Vs")                  // supply voltage
+            units_sup_volt = "V"
+            Local.Channel.AddValue(strDevice,0,"Supply voltage",0,val)
+            
+         case (header=="Vr")                  // reference voltage (3.5)
+            units_ref_volt = "V"
+            Local.Channel.AddValue(strDevice,0,"Ref voltage",0,val)
+            
+         endcase
+      endfor
+   else
+      return NULL
+   endif
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,init,0
+// initializes variables necessary for device to operate
+
+// create variables to hold units for each I/O channel
+local string units_ws_min
+local string units_ws_avg
+local string units_ws_max
+local string units_wd_min
+local string units_wd_avg
+local string units_wd_max
+local string units_air_press
+local string units_air_temp
+local string units_int_temp
+local string units_rh
+local string units_rain_acc
+local string units_rain_dur
+local string units_rain_int
+local string units_rain_peak_int
+local string units_hail_acc
+local string units_hail_dur
+local string units_hail_int
+local string units_hail_peak_int
+local string units_heat_temp
+local string units_heat_volt
+local string units_sup_volt
+local string units_ref_volt
+
+// device state vars
+local isListening = 0                         // false: don't stream
+local inPollMode = 0                          // false: assume automatic mode
+local includeCRC = 0                          // false: don't include CRC in poll mode
+local string address                          // holds device address of WXT
+local string CRLF = Chr(13)+Chr(10)           // short-hand notation
+
+address = getAddress()                        // try to populate
+
+print("Finished initializing device.")
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,listen,0
+// when WXT is automatic (streaming) mode, this function switches
+// the data aqcuisition (listening) ON and OFF
+
+if (inPollMode)
+   System.ErrorMessage(strDevice+": Attempted to listen while in polled mode")
+   return NULL
+endif
+if (GetLength(address) != 1)
+   print("Invalid device address! Attempting to retrieve device address...")
+   address = getAddress()
+   if (GetLength(address) != 1)
+      print("Failed to retrieve device address. Listening OFF")
+      return NULL
+   endif
+endif
+
+Purge()
+isListening = !isListening
+
+if (isListening)
+   print("Listening for datastream...")
+else
+   print("Paused listening for datastream.")
+endif
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,print,0
+// adds entries to the status channel; add a channel event "? status[0]"
+// to also display entries to the command window
+
+Function print(string inStr)
+   
+   private string out = FormatDateTime("%m/%d/%Y %H:%M:%S",SysTime())+" "+strDevice+": "+inStr
+   Local.Channel.AddValue(strDevice,0,"Status",0,out)
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,getAck,0
+// "This command is used to ensure that a device is
+// responding to a data recorder or another device. It
+// asks a device to acknowledge its presence on the bus
+
+Function getAck()
+   
+   private string ack
+   try
+      ack = HideHidden(PollUntil(address+CRLF,10))
+   catch()
+      ack = ""
+   endcatch
+      
+   If(ack==address) 
+      print("Device acknowledged successfully")
+      return 0
+   else
+      print("Device failed to acknowledge "+ack)
+      return 1
+   endif
+
+
+
+
+
+
+ENDIO
+
+F,getAddress,0
+// This command is used to query the address of the
+// device on the bus
+
+Function getAddress()
+   
+   private string ack
+   try
+      ack = HideHidden(PollUntil("?"+CRLF,10))
+      address = ack
+   catch()
+      ack = "not retrievable - check COM settings"
+      address = ""
+   endcatch
+   print("Current device address is "+ack)
+   return address
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,resetDevice,0
+// This command is used to perform software reset on the device.
+
+Function resetDevice()
+   private string msg
+   private string confirm
+   private string ack
+   
+   msg = "Resetting "+strDevice+" will interrupt all current"
+   msg += " measurements and start them from the beginning."
+   msg += " Are you sure you wish to reset?"
+   
+   confirm = System.MessageBox(msg,"YesNo","")
+   
+   If (confirm=="No")
+      return NULL
+   else
+      try
+         ack = HideHidden(PollUntil(address+"XZ"+CRLF,10))
+      catch()
+         ack = ""
+      endcatch
+   endif
+   
+   If (Find(ack,"Start-up",0) > 0) 
+      print("Device reset successfully")
+      return 0
+   else
+      print("Failed to reset device")
+      return NULL
+   endif
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,resetPrecip,0
+// This command is used to reset the precipitation sensor counts.
+
+Function resetPrecip()
+   private string msg
+   private string confirm
+   private string ack
+   
+   msg  = "This will reset all precipitation sensor counts for "
+   msg += strDevice
+   msg += ". Are you sure you wish to continue?"
+   
+   confirm = System.MessageBox(msg,"YesNo","")
+   
+   If (confirm=="No")
+      return NULL
+   else
+      try
+         ack = HideHidden(PollUntil(address+"XZRU"+CRLF,10))
+      catch()
+         ack = ""
+      endcatch
+   endif
+   
+   If (Find(ack,"Rain reset",0) > 0)
+      print("Precipitation counters reset successfully")
+      return 0
+   else
+      print("Failed to reset precipitation counters")
+      return NULL
+   endif
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,resetMeasures,0
+// This command is used to interrupt all ongoing measurements
+// of the transmitter and start them from the beginning
+
+Function resetMeasures()
+   private string msg
+   private string confirm
+   private string ack
+   
+   msg  = "This will reset all measurements for "+strDevice
+   msg += ". Are you sure you wish to continue?"
+   
+   confirm = System.MessageBox(msg,"YesNo","")
+   
+   If (confirm=="No")
+      return NULL
+   else 
+      try
+         ack = HideHidden(PollUntil(address+"XZM"+CRLF,10))
+      catch()
+         ack = ""
+      endcatch
+   endif
+   
+   If (Find(ack,"Measurement reset",0) > 0)
+      print("All measurements reset successfully")
+      return 0
+   else
+      print("Failed to reset all measurements")
+      return NULL
+   endif
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,addCRC,0
+// Function computes CRC-16 for use in polled mode with WXT510
+//
+// Quoted from WXT510 Users Guide (Sept 2004):
+// "The computation of the CRC is performed on the data response
+// before parity is added. All operations are assume to be on 
+// 16-bit unsigned integers. The least significant bit is on the
+// right. Numbers preceded by 0x are in hexadecimal. All shifts
+// shift in a zero. The algorithm is:"
+//
+// & bitwise AND
+// | bitwise OR
+// # bitwise XOR
+
+Function addCRC(string in)
+   
+   private string out = in // init to input string
+   private crc = 0         // "Initialize the CRC to zero."
+   
+   // "For each character beginning with the address, up to but 
+   // not including the carriage return (<cr>), do as follows:"
+   for (private.i=0, i<GetLength(in), i++)
+      if (Mid(in,i,1) == Chr(13))   // if reading <CR>
+         break                         // quit
+      endif
+      
+      // "Set the CRC equal to the exclusive OR of the 
+      // character and itself" (the CRC)
+      crc = (Asc(Mid(in,i,1)) # crc)
+      
+      // "for count = 1 to 8"
+      for (private.j=0, j<8, j++)
+         // "if the least significant bit of the CRC is 1"
+         if (TestBit(crc, 0))
+            // "right shift the CRC one bit"
+            crc = (crc >> 1)
+            // "set CRC = exclusive OR of 0xA001 and itself"
+            crc = (0xA001 # crc)
+         // "else"
+         else
+            // "right shift CRC 1 bit"
+            crc = (crc >> 1)
+         endif
+      endfor
+   endfor
+   
+   // "The 16 bit CRC is encoded to three ASCII characters by
+   // using the following algorithm:
+   // 1st character = 0x40 OR (CRC shifted right 12 bits)
+   // 2nd character = 0x40 OR ((CRC shifted right 6 bits) AND 0x3F)
+   // 3rd character = 0x40 OR (CRC and 0x3F)
+   // The three ASCII characters are placed between the data and 
+   // <cr><lf>. Parity is applied to all three characters, if
+   // selected for the character frame."
+   out += Chr(0x40 | (crc >> 12))
+   out += Chr(0x40 | ((crc >> 6) & 0x3F))
+   out += Chr(0x40 | (crc & 0x3F))
+   return out
+
+
+ENDIO
+
+E,OnLoad
+// called upon loading the device into DAQFactory
+
+print("Loading device...")
+init()
+getAck()
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnUnload
+// called upon unloading the device from DAQFactory
+
+print("Unloading device")
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnReceive
+// called whenever a character is recevied into the buffer
+
+if (strIn == Chr(10))       // upon receiving a line feed
+   private stamp = 0           // set a value to capture time
+   if (isListening)            // if listening to stream
+      private string data = HideHidden(ReadUntil(Chr(10)))   // read buffer
+      parseWXTdata(data, stamp)   // send data to channels
+   endif
+endif
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+E,OnSend
+// called whenver a string is sent from DAQFactory
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
