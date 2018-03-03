@@ -18,6 +18,13 @@ For SATI-* series ultrasonic anemometers by Applied Technologies Inc (ATI).
 Developed using type K and Sx models but probably usable or at least adaptable
 to other types. 
 
+
+### Hamamatsu photomultiplier tube (PMT)
+
+For model HC-135 photomultplier tube (PMT) manufactured by Hamamatsu Corp. This
+is the analytical component of the Hills Scientific Fast Isoprene Sensor (FIS).
+
+
 ### LICOR open-path CO2 analyzer
 
 For model LI-7500 open-path infrared CO2/H2O analyzer (IRGA).
