@@ -19,6 +19,11 @@ Developed using type K and Sx models but probably usable or at least adaptable
 to other types. 
 
 
+### Campbell Scientific sonic anemometer
+
+For the older CSAT3 ultrasonic anemometer made by Campbell Scientific.
+
+
 ### Hamamatsu photomultiplier tube (PMT)
 
 For model HC-135 photomultplier tube (PMT) manufactured by Hamamatsu Corp. This

@@ -1,0 +1,390 @@
+
+U,CSAT3
+
+//////// Channels
+
+
+I,U (m/s),1,input,numeric
+//
+ENDIO
+
+I,V (m/s),2,input,numeric
+//
+ENDIO
+
+I,W (m/s),3,input,numeric
+//
+ENDIO
+
+I,Cs (m/s),4,input,numeric
+//
+ENDIO
+
+I,diag C err,5,input,numeric
+//
+ENDIO
+
+I,diag poor signal lock,6,input,numeric
+//
+ENDIO
+
+I,diag high amp,7,input,numeric
+//
+ENDIO
+
+I,diag low amp,8,input,numeric
+//
+ENDIO
+
+I,diag counter,9,input,numeric
+//
+ENDIO
+
+I,diag word,10,input,numeric
+//
+ENDIO
+
+I,Status,11,input,string
+//
+ENDIO
+
+
+//////// Functions
+
+
+F,Poll,1
+// Poll the port with string `out` and read `numBytes` worth of bytes of the
+// response.
+//
+// Throws caught exceptions after unlocking port
+//
+// If returns NULL then very serious error
+//
+function Poll(string out, numBytes)
+   if (argc < 2)
+      throw("Invalid number of parameters")
+   endif
+
+   private string in
+   try
+      if (!LockPort())
+         throw("Unable to lock port")
+      endif
+      Purge()
+      Write(out)
+      if (numBytes > 0)
+         in = Read(numBytes)
+      endif
+      UnlockPort()
+      return(in)
+   catch()
+      UnlockPort()
+      throw() // error
+   endcatch
+   return(NULL) // <-- should never be reached (!)
+ENDIO
+
+
+F,An,0
+// begin acquiring signals in sync with this command
+//
+// send A#
+// where #= 1  not used       9  10Hz     (10)
+//          2  1Hz      (1)   a  12Hz     (12)
+//          3  not used       b  15Hz     (15)
+//          4  not used       c  20Hz     (20)
+//          5  2Hz      (2)   d  30Hz     (30)
+//          6  3Hz      (3)   e  60Hz     (60)
+//          7  5Hz      (5)   f  60->10Hz (6010)
+//          8  6Hz      (6)   g  60->20Hz (6020)
+// Note 1: CSAT will ignore command if datalogger is
+//          performing SDM triggering
+// Note 2: If PC is trigger source, it must continue
+//          to trigger at rate specified otherwise
+//          CSAT will enter lost trigger & must have 
+//          execution parameter reset 
+// Note 3: PC must send 2nd byte within 2 seconds of 
+//          1st byte or anemometer resets itself using
+//          execution parameter from static memory
+//
+Function An(hertz,memCommit)
+   if (argc<2) 
+      throw("CSAT3 Invalid # of parameters passed to An()")
+   endif
+   
+   switch
+      case (hertz==1)
+         Poll("A2",0)
+         print("Setting execution parameter to 1Hz...")
+      case (hertz==2)
+         Poll("A5",0)
+         print("Setting execution parameter to 2Hz...")
+      case (hertz==3)
+         Poll("A6",0)
+         print("Setting execution parameter to 3Hz...")
+      case (hertz==5)
+         Poll("A7",0)
+         print("Setting execution parameter to 5Hz...")
+      case (hertz==6)
+         Poll("A8",0)
+         print("Setting execution parameter to 6Hz...")
+      case (hertz==10)
+         Poll("A9",0)
+         print("Setting execution parameter to 10Hz...")
+      case (hertz==12)
+         Poll("Aa",0)
+         print("Setting execution parameter to 12Hz...")
+      case (hertz==15)
+         Poll("Ab",0)
+         print("Setting execution parameter to 15Hz...")
+      case (hertz==20)
+         Poll("Ac",0)
+         print("Setting execution parameter to 20Hz...")
+      case (hertz==30)
+         Poll("Ad",0)
+         print("Setting execution parameter to 30Hz...")
+      case (hertz==60)
+         Poll("Ae",0)
+         print("Setting execution parameter to 60Hz...")
+      case (hertz==6010)
+         Poll("Af",0)
+         print("Setting execution parameter to 60->10Hz...")
+      case (hertz==6020)
+         Poll("Ag",0)
+         print("Setting execution parameter to 60->20Hz...")
+      default
+         throw("CSAT3 Invalid parameter value (hertz) passed to An()")
+   endcase
+   
+   if (memCommit)
+      //Poll("sr2718",0)
+      print("Warning! Committing execution parameter to EEPROM memory not supported yet"
+   endif
+ENDIO
+
+
+F,PollUntil,1
+// Poll the port with given string and read response up to given character.
+//
+// Throws caught exceptions after unlocking port.
+//
+// If returns NULL then very serious error
+//
+function PollUntil(string out, until)
+   if (argc < 2)
+      throw("Invalid number of parameters")
+   endif
+
+   private string in
+   try
+      if (!LockPort())
+         throw("Unable to lock port")
+      endif
+      Purge()
+      Write(out)
+      in = ReadUntil(until)
+      UnlockPort()
+      return(in)
+   catch()
+      UnlockPort()
+      throw()
+   endcatch
+   return(NULL) // <-- should never be reached (!)
+ENDIO
+
+
+F,parseCSAT3data,1
+// what to do with data strings?
+// whatever you do, do it fast
+
+function parseCSAT3data()
+   private Ux = To.Word(AscA(Read(2)))
+   private Uy = To.Word(AscA(Read(2)))
+   private Uz = To.Word(AscA(Read(2)))
+   private Cs = To.Word(AscA(Read(2)))
+   private diag = To.uWord(AscA(Read(2)))
+   private diagBits = To.Bit(diag,16)
+   private counter = From.Bit(diagBits[0][0,5])
+
+   // apply Ux range scaling
+   switch
+      case ((diagBits[0][11]==1) && (diagBits[0][10]==1))
+         Ux = Ux*0.00025
+      case ((diagBits[0][11]==1) && (diagBits[0][10]==0))
+         Ux = Ux*0.00050
+      case ((diagBits[0][11]==0) && (diagBits[0][10]==1))
+         Ux = Ux*0.00100
+      case ((diagBits[0][11]==0) && (diagBits[0][10]==0))
+         Ux = Ux*0.00200
+   endcase
+   
+   // apply Uy range scaling
+   switch
+      case ((diagBits[0][9]==1) && (diagBits[0][8]==1))
+         Uy = Uy*0.00025
+      case ((diagBits[0][9]==1) && (diagBits[0][8]==0))
+         Uy = Uy*0.00050
+      case ((diagBits[0][9]==0) && (diagBits[0][8]==1))
+         Uy = Uy*0.00100
+      case ((diagBits[0][9]==0) && (diagBits[0][8]==0))
+         Uy = Uy*0.00200
+   endcase
+   
+   // apply Uz range scaling
+   switch
+      case ((diagBits[0][7]==1) && (diagBits[0][6]==1))
+         Uz = Uz*0.00025
+      case ((diagBits[0][7]==1) && (diagBits[0][6]==0))
+         Uz = Uz*0.00050
+      case ((diagBits[0][7]==0) && (diagBits[0][6]==1))
+         Uz = Uz*0.00100
+      case ((diagBits[0][7]==0) && (diagBits[0][6]==0))
+         Uz = Uz*0.00200
+   endcase
+   
+   Cs = (Cs*0.001 + 340.0)  // apply Cs range scaling
+   
+   Local.Channel.AddValue(strDevice,0,"U (m/s)",0,Ux)
+   Local.Channel.AddValue(strDevice,0,"V (m/s)",0,InsertTime(Uy,Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"W (m/s)",0,InsertTime(Uz,Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"Cs (m/s)",0,InsertTime(Cs,Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"diag counter",0,InsertTime(counter,Ux.Time,0))   
+   Local.Channel.AddValue(strDevice,0,"diag low amp",0,InsertTime(diagBits[0][12],Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"diag high amp",0,InsertTime(diagBits[0][13],Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"diag poor signal lock",0,InsertTime(diagBits[0][14],Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"diag C err",0,InsertTime(diagBits[0][15],Ux.Time,0))
+   Local.Channel.AddValue(strDevice,0,"diag word",0,InsertTime(From.Bit(diagBits[0][12,15]),Ux.Time,0))
+ENDIO
+
+
+F,stream,0
+// function sends command to begin/end continuous data stream
+//
+// send &
+// receive uncontrolled datastream
+
+Function stream()
+   if (argc>0)
+      throw("CSAT3 Invalid # of parameters passed to streamOn()")
+   endif
+   
+   if (IsEmpty(bytesRead))
+      reset()
+   endif
+   
+   Poll("&",0)
+   bytesRead = 0
+   
+   switch
+      case (!isStreaming)
+         print("Starting CSAT3 datastream...")
+         delay(0.5)
+         try
+            private string in = Read(10)
+         catch("C1136")
+            isStreaming = 0
+            print("CSAT3 datastream timed out! Stopping...")
+            return(-1)
+         endcatch
+         isStreaming = 1
+         return(0)
+      case (isStreaming)
+         print("Stopping CSAT3 datastream...")
+         isStreaming = 0
+         return(0)
+   endcase
+
+   return (NULL)
+ENDIO
+
+
+F,reset,0
+// initalization function
+print("Initializing device...")
+
+local isStreaming = 0
+local isListening = 0
+local bytesRead = 0
+ENDIO
+
+
+F,nowTimeString,0
+// returns nicely formatted string with device name & semicolon
+Function nowTimeString()
+  return (FormatDateTime("%m/%d/%Y %H:%M:%S",SysTime())+" "+strDevice+": ")
+ENDIO
+
+
+F,print,1
+// saves strings to status channel and outputs to 
+// command window
+Function print(string inStr)
+   if (argc != 1)
+      throw("CSAT3 Invalid # of parameters passed to print()")
+   endif
+   
+   private string out = nowTimeString()+inStr
+   Local.Channel.AddValue(strDevice,0,"Status",0,out)
+ENDIO
+
+
+F,roundToTenths,1
+Function roundToTenths(inVal)
+   if (((inVal*10)%1) >= 0.5000)
+      return (Floor(inVal*10)/10 + 0.1)
+   else
+      return (Floor(inVal*10)/10)
+   endif
+ENDIO
+
+
+F,listen,0
+// function sends command to begin/end continuous data stream
+//
+// send &
+// receive uncontrolled datastream
+Function listen()
+   if (argc>0)
+      throw("CSAT3 Invalid # of parameters passed to listen()")
+   endif
+   
+   bytesRead = 0
+   isListening = !isListening
+
+   return (NULL)
+ENDIO
+
+
+//////// Built-ins Overrides
+
+
+E,OnLoad
+reset()
+print("Finished loading device")
+ENDIO
+
+
+E,OnUnload
+// do housekeeping -> put in known state
+if (isStreaming)
+   stream()
+endif
+print ("Unloading device...")
+ENDIO
+
+
+E,OnReceive
+if (isStreaming || isListening) // if expecting datastream
+   bytesRead += 1       // track how many bytes read in
+   if (bytesRead == 10) // upon reaching 10
+      bytesRead = 0     // reset the counter
+      parseCSAT3data()       // and read data from buffer
+   endif
+endif
+ENDIO
+
+
+E,OnSend
+//
+ENDIO
+
