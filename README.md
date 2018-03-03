@@ -18,6 +18,11 @@ For SATI-* series ultrasonic anemometers by Applied Technologies Inc (ATI).
 Developed using type K and Sx models but probably usable or at least adaptable
 to other types. 
 
+### LICOR open-path CO2 analyzer
+
+For model LI-7500 open-path infrared CO2/H2O analyzer (IRGA).
+
+
 ### TSI condensation particle counter
 
 Developed for Model 3775 Condensation Particle Counter (CPC) by TSI.
