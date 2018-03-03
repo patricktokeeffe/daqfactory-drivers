@@ -9,3 +9,8 @@ here.
 
 Released under the terms of the [MIT License](LICENSE)
 
+## Disclaimers
+
+This work is not affiliated with or endorsed by any manufacturer or company
+mentioned here. 
+
