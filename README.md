@@ -18,6 +18,10 @@ For SATI-* series ultrasonic anemometers by Applied Technologies Inc (ATI).
 Developed using type K and Sx models but probably usable or at least adaptable
 to other types. 
 
+### TSI condensation particle counter
+
+Developed for Model 3775 Condensation Particle Counter (CPC) by TSI.
+
 
 
 ## License
