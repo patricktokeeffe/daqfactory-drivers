@@ -10,6 +10,15 @@ here.
 2. Restart DAQFActory
 
 
+## Available Drivers
+
+### ATI sonic anemometer
+
+For SATI-* series ultrasonic anemometers by Applied Technologies Inc (ATI).
+Developed using type K and Sx models but probably usable or at least adaptable
+to other types. 
+
+
 
 ## License
 

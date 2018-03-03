@@ -1,0 +1,341 @@
+U,ATI
+I,U (m/s),1,input,numeric
+// placeholder channel for U-axis wind speed
+
+
+
+
+
+
+ENDIO
+
+I,V (m/s),2,input,numeric
+// placeholder channel for V-axis wind speed
+
+
+
+
+
+
+ENDIO
+
+I,W (m/s),3,input,numeric
+// placeholder channel for W-axis wind speed
+
+
+
+
+
+
+ENDIO
+
+I,Ts (*C),4,input,numeric
+// placeholder channel for sonic temperature
+
+
+
+
+
+
+ENDIO
+
+I,dropout-U,5,input,numeric
+// boolean channel to highlight 9999 values
+
+
+
+
+
+
+ENDIO
+
+I,dropout-V,6,input,numeric
+// boolean channel to highlight 9999 values
+
+
+
+
+
+
+ENDIO
+
+I,dropout-W,7,input,numeric
+// boolean channel to highlight 9999 values
+
+
+
+
+
+
+ENDIO
+
+I,dropout-Ts,8,input,numeric
+// boolean channel to highlight 9999 values
+
+
+
+
+
+
+ENDIO
+
+I,Status,9,input,string
+// place to post messages to
+
+
+
+
+
+
+ENDIO
+
+
+
+F,Poll,1
+function Poll(string out, numBytes)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   Purge()
+   Write(out)
+   if (numBytes > 0)
+      in = Read(numBytes) 
+   endif
+   UnlockPort()
+   return(in)
+catch()
+   UnlockPort()
+   throw()
+endcatch
+return(NULL)
+
+
+
+
+
+
+ENDIO
+
+F,PollUntil,1
+function PollUntil(string out, until)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   Purge()
+   Write(out)
+   in = ReadUntil(until) 
+   UnlockPort()
+   return(in)
+catch()
+   UnlockPort()
+   throw()
+endcatch
+return(NULL)
+
+
+
+
+
+
+ENDIO
+
+F,parseData,1
+function parseData(string in)
+	//private string in = input
+   //private stamp = input.time
+   private Ux
+   private Uy
+   private Uz
+   private Ts
+   
+   ? GetLength(in)
+   //Local.Channel.AddValue(strDevice,0,"U (m/s)",0,StrToDouble(Mid(in,0,5))/100)
+   
+   if (GetLength(in)==22)
+		Ux = StrToDouble(Mid(in,0,5)) / 100
+      ? "terse"
+		Uy = StrToDouble(Mid(in,5,5))
+      Uz = StrToDouble(Mid(in,10,5))
+      Ts = StrToDouble(Mid(in,15,5))
+		// private Ux = StrToDouble(Mid(in,0,3)+"."+Mid(in,3,2))
+		// private Uy = StrToDouble(Mid(in,5,3)+"."+Mid(in,8,2))
+		// private Uz = StrToDouble(Mid(in,10,3)+"."+Mid(in,13,2))
+		// private Ts = StrToDouble(Mid(in,15,3)+"."+Mid(in,18,2))
+		//? Mid(in,5,3)+"."+Mid(in,8,2)
+		//? Mid(in,10,3)+"."+Mid(in,13,2)
+		//? Mid(in,15,3)+"."+Mid(in,18,2)
+	else if (GetLength(in)==36)
+		//private Ux = StrToDouble(Mid(in,1,6))
+		//private Uy = StrToDouble(Mid(in,9,6))
+		//private Uz = StrToDouble(Mid(in,17,6))
+		//private Ts = StrToDouble(Mid(in,25,6))
+      ? "verbose"
+   else
+      ? "else"
+      print("ignored partial record")
+      return
+	endif
+   
+//	if (Abs(Ux) > 99.90)
+//		Local.Channel.AddValue(strDevice,0,"U (m/s)",0,InsertTime(NAN(),stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-U",0,InsertTime(1,stamp.time,0))
+//	else
+		//Local.Channel.AddValue(strDevice,0,"U (m/s)",0,Ux)//InsertTime(Ux,stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-U",0,InsertTime(0,stamp.time,0))
+//	endif
+//	if (Abs(Uy) > 99.90)
+//		Local.Channel.AddValue(strDevice,0,"V (m/s)",0,InsertTime(NAN(),stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-V",0,InsertTime(1,stamp.time,0))
+//	else
+//		Local.Channel.AddValue(strDevice,0,"V (m/s)",0,InsertTime(Uy,stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-V",0,InsertTime(0,stamp.time,0))
+//	endif
+//	if (Abs(Uz) > 99.90)
+//		Local.Channel.AddValue(strDevice,0,"W (m/s)",0,InsertTime(NAN(),stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-W",0,InsertTime(1,stamp.time,0))
+//	else
+//		Local.Channel.AddValue(strDevice,0,"W (m/s)",0,InsertTime(Uz,stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-W",0,InsertTime(0,stamp.time,0))
+//	endif
+//	if (Abs(Ts) > 99.90)
+//		Local.Channel.AddValue(strDevice,0,"Ts (*C)",0,InsertTime(NAN(),stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-Ts",0,InsertTime(1,stamp.time,0))
+//	else
+//		Local.Channel.AddValue(strDevice,0,"Ts (*C)",0,InsertTime(Ts,stamp.time,0))
+//		Local.Channel.AddValue(strDevice,0,"dropout-Ts",0,InsertTime(0,stamp.time,0))
+//	endif
+
+
+
+
+
+
+ENDIO
+
+F,reset,0
+print("Initializing device...")
+local isListening = 0
+
+
+
+
+
+
+ENDIO
+
+F,nowTimeString,0
+Function nowTimeString()
+return (FormatDateTime("%Y/%m/%d %H:%M:%S",SysTime()))
+
+
+
+
+
+
+ENDIO
+
+F,print,1
+Function print(string msg)   
+   private string out = nowTimeString()+" "+strDevice+": "+msg
+   Local.Channel.AddValue(strDevice,0,"Status",0,out)
+
+
+
+
+
+
+ENDIO
+
+F,roundToTenths,1
+Function roundToTenths(inVal)
+   if (((inVal*10)%1) >= 0.5000)
+      return (Floor(inVal*10)/10 + 0.1)
+   else
+      return (Floor(inVal*10)/10)
+   endif
+
+
+
+
+
+
+ENDIO
+
+F,listen,0
+Function listen()
+   if (argc>0)
+      throw(strDevice+": Too many parameters passed to listen()")
+   endif
+   isListening = !isListening
+   return (NULL)
+
+
+
+
+
+
+ENDIO
+
+E,OnLoad
+reset()  // & initalize the local variables
+print("Finished loading device")
+
+
+
+
+
+
+ENDIO
+
+E,OnUnload
+print ("Unloading device...")
+
+
+
+
+
+
+ENDIO
+
+E,OnReceive
+if (strIn == Chr(10)) 	// upon receiving line feed
+   if (isListening)
+      private string input = ReadUntil(Chr(10))
+      parseData(input) 
+   else
+      purge()
+   endif
+endif
+
+
+
+
+
+ENDIO
+
+E,OnSend
+// do nothing
+
+
+
+
+
+
+ENDIO
+
