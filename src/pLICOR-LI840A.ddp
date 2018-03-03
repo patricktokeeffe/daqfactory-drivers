@@ -1,6 +1,182 @@
 U,Licor LI840A
-I,Status,0,input,string
+I,Cell temperature (degC),0,input,numeric
+// <LI840><DATA><CELLTEMP>{float}
+// degrees Celcius
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Cell pressure (kPa),1,input,numeric
+// <LI840><DATA><CELLPRES>{float}
+// kilopascals
+
+
+
+
+
+
+
+
+ENDIO
+
+I,CO2 mixing ratio (ppm),2,input,numeric
+// <LI840><DATA><CO2>{float}
+// parts per million
+
+
+
+
+
+
+
+
+ENDIO
+
+I,CO2 absorption (arb),3,input,numeric
+// <LI840><DATA><CO2ABS>{float}
+// *not specified*
+
+
+
+
+
+
+
+
+ENDIO
+
+I,H2O mixing ratio (ppt),4,input,numeric
+// <LI840><DATA><H2O>{float}
+// parts per thousand (mmol/mol)
+
+
+
+
+
+
+
+
+ENDIO
+
+I,H2O absorption (arb),5,input,numeric
+// <LI840><DATA><H2OABS>{float}
+// *not specified*
+
+
+
+
+
+
+
+
+ENDIO
+
+I,H2O dew point (degC),6,input,numeric
+// <LI840><DATA><H2ODEWPOINT>{float}
+// degrees Celcius
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Input voltage (Vdc),7,input,numeric
+// <LI840><DATA><IVOLT>{float}
+// volts
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Raw CO2,8,input,numeric
+// <LI840><RAW><DATA><CO2>{integer}
+// *not specified*
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Raw CO2 reference,9,input,numeric
+// <LI840><RAW><DATA><CO2REF>{integer}
+// *not specified*
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Raw H2O,10,input,numeric
+// <LI840><RAW><DATA><H2O>{integer}
+// *not specified*
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Raw H2O reference,11,input,numeric
+// <LI840><RAW><DATA><H2OREF>{integer}
+// *not specified*
+
+
+
+
+
+
+
+
+ENDIO
+
+I,Status,12,input,string
 // device-specific status update stream
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,reset,0
+
+local isListening = 1      //
+local inPollMode = 0       // default (false): unpolled mode
+
+
+
+
 
 
 
@@ -44,6 +220,10 @@ return(NULL)
 
 
 
+
+
+
+
 ENDIO
 
 F,print,1
@@ -56,14 +236,61 @@ Function print(string inStr)
 
 
 
+
+
+
+
+
+ENDIO
+
+F,parseData,1
+
+Function parseData(string data, stamp)
+   
+   Local.Channel.AddValue(
+
+
+
+
+
+
+
+
+
+
+ENDIO
+
+F,Listen,0
+
+
+   isListening = !isListening
+   print("Streaming mode toggled")
+   
+   //if (isListening)
+   //   print("Listening for unpolled data")
+   //else
+   //   print("Not listening for unpolled data")
+   //endif
+
+
+
+
+
+
+
+
+
 ENDIO
 
 E,OnLoad
 
-print("Initializing...")
+print("Initalizing...")
+reset()
 
-local isStreaming = 1  // default config is unpolled
-local isListening = 0  // ignore data stream
+local isStreaming = 0
+local myvar
+
+
 
 
 
@@ -78,26 +305,35 @@ E,OnUnload
 
 
 
+
 ENDIO
 
 E,OnReceive
 // upon receiving character into buffer
 
-local isStreaming
-local isListening
-
-if (1)//isStreaming && isListening)
-   if (strIn == Chr(10))       // check for line feed, 0x10
-      private string rec = ReadUntil(10)
-      Channel.AddValue(strDevice,0,"Status",0,rec)
+if (strIn == Chr(10))       // check for line feed, 0x10
+   private stamp = 0        // create timestamp
+   if (1)//isStreaming)
+   //if (isListening)         // if not ignoring incoming data
+      private string data = ReadUntil(Chr(10)) // read it
+      //parseData(data, stamp)                   // and parse
+      //? "foo"
    endif
 endif
+
+
+
+
+
+
 
 
 
 ENDIO
 
 E,OnSend
+// <LI840><DATA><CELLTEMP>{float}
+// degrees Celcius
 
 
 
