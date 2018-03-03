@@ -1,0 +1,90 @@
+U,MWE_LI840A
+I,Input,0,input,string
+
+
+
+ENDIO
+
+F,Poll,0
+function Poll(string out, until)
+// this function will poll the port with given string and read
+// the response until the given character.  Returns NULL (empty)
+// if there is an error
+
+if (argc < 2)
+   throw("Invalid number of parameters")
+endif
+private string in
+try
+   // lock the port
+   if (!LockPort())
+      throw("Unable to lock port")
+   endif
+   // clear anything pending
+   Purge()
+   // output our string
+   Write(out)
+   // and read until the eol:
+   in = ReadUntil(until) 
+   // release the port
+   UnlockPort()
+   // and return the response
+   return(in)
+catch()
+   // error occured
+   UnlockPort()
+   throw()
+endcatch
+// return NULL to indicate error.  This should never happen
+// because of the throw() statement above
+return(NULL)
+
+
+
+ENDIO
+
+E,OnLoad
+
+? strDevice + ": Loading..."
+
+local transient streamflag = 0
+
+? strDevice + ": Loaded."
+
+
+ENDIO
+
+E,OnUnload
+
+
+
+ENDIO
+
+E,OnReceive
+
+if (streamflag)
+   if (strIn == Chr(10))
+      private string datain = ReadUntil(10)
+      Channel.AddValue(strDevice, 0, "Input", 0, datain)
+   endif
+endif
+
+
+
+
+ENDIO
+
+E,OnSend
+
+if (streamflag)
+   if (strIn == Chr(10))
+      private string datain = ReadUntil(10)
+      Channel.AddValue(strDevice, 0, "Input", 0, datain)
+   endif
+endif
+
+
+
+
+ENDIO
+

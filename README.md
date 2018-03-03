@@ -30,6 +30,12 @@ For model HC-135 photomultplier tube (PMT) manufactured by Hamamatsu Corp. This
 is the analytical component of the Hills Scientific Fast Isoprene Sensor (FIS).
 
 
+### LICOR closed-path CO2 analyzer
+
+In development: for model LI-840A closed path CO2/H2O gas analyzer by LICOR
+Biosciences.
+
+
 ### LICOR open-path CO2 analyzer
 
 For model LI-7500 open-path infrared CO2/H2O analyzer (IRGA).
