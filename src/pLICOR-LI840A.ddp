@@ -1,11 +1,12 @@
-U,MWE_LI840A
-I,Input,0,input,string
+U,Licor LI840A
+I,Status,0,input,string
+// device-specific status update stream
 
 
 
 ENDIO
 
-F,Poll,0
+F,Poll,1
 function Poll(string out, until)
 // this function will poll the port with given string and read
 // the response until the given character.  Returns NULL (empty)
@@ -41,15 +42,29 @@ return(NULL)
 
 
 
+
+
+ENDIO
+
+F,print,1
+// output to device's status channel
+
+Function print(string inStr)
+   private string out = FormatDateTime("%Y-%m-%d %H:%M:%S",SysTime())+" "+strDevice+": "+inStr
+   Local.Channel.AddValue(strDevice,0,"Status",0,out)
+
+
+
+
 ENDIO
 
 E,OnLoad
 
-? strDevice + ": Loading..."
+print("Initializing...")
 
-local transient streamflag = 0
+local isStreaming = 1  // default config is unpolled
+local isListening = 0  // ignore data stream
 
-? strDevice + ": Loaded."
 
 
 ENDIO
@@ -58,17 +73,25 @@ E,OnUnload
 
 
 
+
+
+
+
+
 ENDIO
 
 E,OnReceive
+// upon receiving character into buffer
 
-if (streamflag)
-   if (strIn == Chr(10))
-      private string datain = ReadUntil(10)
-      Channel.AddValue(strDevice, 0, "Input", 0, datain)
+local isStreaming
+local isListening
+
+if (1)//isStreaming && isListening)
+   if (strIn == Chr(10))       // check for line feed, 0x10
+      private string rec = ReadUntil(10)
+      Channel.AddValue(strDevice,0,"Status",0,rec)
    endif
 endif
-
 
 
 
@@ -76,12 +99,9 @@ ENDIO
 
 E,OnSend
 
-if (streamflag)
-   if (strIn == Chr(10))
-      private string datain = ReadUntil(10)
-      Channel.AddValue(strDevice, 0, "Input", 0, datain)
-   endif
-endif
+
+
+
 
 
 
