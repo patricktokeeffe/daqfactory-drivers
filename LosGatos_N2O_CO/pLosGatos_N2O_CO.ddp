@@ -1,10 +1,73 @@
-U,n2o_Analyzer
-I,input,0,input,numeric
-
-
-
+U,LosGatos_N2O_CO
+I,N2O (ppb),0,input,numeric
+//
+// The MIT License
+// Copyright (c) 2020 WSU Laboratory for Atmospheric Research
+// https://mit-license.org/
 
 ENDIO
+
+I,N2O (dry ppb),1,input,numeric
+
+ENDIO
+
+I,CO (ppb),2,input,numeric
+
+ENDIO
+
+I,CO (dry ppb),3,input,numeric
+
+ENDIO
+
+I,H2O (ppm),4,input,numeric
+
+ENDIO
+
+I,Cell Pressure (Torr),5,input,numeric
+
+ENDIO
+
+I,Cell Temperature (Celsius),6,input,numeric
+
+ENDIO
+
+I,Ambient Temperature (Celsius),7,input,numeric
+
+ENDIO
+
+
+I,SE of N2O (ppb),8,input,numeric
+
+ENDIO
+
+I,SE of N2O (dry ppb),9,input,numeric
+
+ENDIO
+
+I,SE of CO (ppb),10,input,numeric
+
+ENDIO
+
+I,SE of CO (dry ppb),11,input,numeric
+
+ENDIO
+
+I,SE of H2O (ppm),12,input,numeric
+
+ENDIO
+
+I,SE of Cell Pressure (Torr),13,input,numeric
+
+ENDIO
+
+I,SE of Cell Temperature (Celsius),14,input,numeric
+
+ENDIO
+
+I,SE of Ambient Temperature (Celsius),15,input,numeric
+
+ENDIO
+
 
 F,Poll,0
 function Poll(string out, until)
@@ -62,14 +125,27 @@ ENDIO
 E,OnReceive
 if (strIn == chr(10))
    
+   //HINT no carriage return, only line feed
    private string datain = ReadUntil(10)
    
+   //HINT don't reference the user manual - it's completely inaccurate
    //because Conversions "aren't supported" for serial devices... convert ppm -> ppb
-   local.channel.AddValue(strDevice,0,"Input_N2O",1,StrToDouble(Parse(datain,1,","))*1000) // CO_wet
-   local.channel.AddValue(strDevice,0,"Input_N2O",2,StrToDouble(Parse(datain,7,","))*1000) // CO_dry
-   local.channel.AddValue(strDevice,0,"Input_N2O",3,StrToDouble(Parse(datain,3,","))*1000) // N2O_wet
-   local.channel.AddValue(strDevice,0,"Input_N2O",4,StrToDouble(Parse(datain,9,","))*1000) // N2O_dry
-   local.channel.AddValue(strDevice,0,"Input_N2O",5,StrToDouble(Parse(datain,5,","))) // H2O
+   //
+   // 0 is timestamp (ignored)
+   Channel.AddValue(strDevice,0,"CO (ppb)",0,StrToDouble(Parse(datain,1,","))*1000)
+   Channel.AddValue(strDevice,0,"SE of CO (ppb)",0,StrToDouble(Parse(datain,2,","))*1000)
+   Channel.AddValue(strDevice,0,"N2O (ppb)",0,StrToDouble(Parse(datain,3,","))*1000)
+   Channel.AddValue(strDevice,0,"SE of N2O (ppb)",0,StrToDouble(Parse(datain,4,","))*1000)
+   Channel.AddValue(strDevice,0,"H2O (ppm)",0,StrToDouble(Parse(datain,5,",")))
+   Channel.AddValue(strDevice,0,"SE of H2O (ppm)",0,StrToDouble(Parse(datain,6,",")))
+   Channel.AddValue(strDevice,0,"CO (dry ppb)",0,StrToDouble(Parse(datain,7,","))*1000)
+   Channel.AddValue(strDevice,0,"SE of CO (dry ppb)",0,StrToDouble(Parse(datain,8,","))*1000)
+   Channel.AddValue(strDevice,0,"N2O (dry ppb)",0,StrToDouble(Parse(datain,9,","))*1000)
+   Channel.AddValue(strDevice,0,"SE of N2O (dry ppb)",0,StrToDouble(Parse(datain,10,","))*1000)
+   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,StrToDouble(Parse(datain,11,","))
+   Channel.AddValue(strDevice,0,"SE of Cell Pressure (Torr)",0,StrToDouble(Parse(datain,12,","))
+   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,13,","))
+   Channel.AddValue(strDevice,0,"SE of Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,14,","))
    
 Endif
 
@@ -78,39 +154,6 @@ Endif
 ENDIO
 
 E,OnSend
-function Poll(string out, until)
-// this function will poll the port with given string and read
-// the response until the given character.  Returns NULL (empty)
-// if there is an error
-
-if (argc < 2)
-   throw("Invalid number of parameters")
-endif
-private string in
-try
-   // lock the port
-   if (!LockPort())
-      throw("Unable to lock port")
-   endif
-   // clear anything pending
-   Purge()
-   // output our string
-   Write(out)
-   // and read until the eol:
-   in = ReadUntil(until) 
-   // release the port
-   UnlockPort()
-   // and return the response
-   return(in)
-catch()
-   // error occured
-   UnlockPort()
-   throw()
-endcatch
-// return NULL to indicate error.  This should never happen
-// because of the throw() statement above
-return(NULL)
-
 
 
 
