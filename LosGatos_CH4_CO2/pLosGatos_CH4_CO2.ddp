@@ -1,10 +1,89 @@
-U,CH4_Analyzer
-I,input,0,input,numeric
-
-
-
+U,LosGatos_CH4_CO2
+I,CH4 (ppm),0,input,numeric
+//
+// The MIT License
+// Copyright (c) 2020 WSU Laboratory for Atmospheric Research
+// https://mit-license.org/
 
 ENDIO
+
+I,CH4 (dry ppm),1,input,numeric
+
+ENDIO
+
+I,CO2 (ppm),2,input,numeric
+
+ENDIO
+
+I,CO2 (dry ppm),3,input,numeric
+
+ENDIO
+
+I,H2O (ppm),4,input,numeric
+
+ENDIO
+
+I,Cell pressure (Torr),5,input,numeric
+
+ENDIO
+
+I,Cell temperature (Celsius),6,input,numeric
+
+ENDIO
+
+I,Ambient temperature (Celsius),7,input,numeric
+
+ENDIO
+
+I,Ringdown 0 (usec),8,input,numeric
+
+ENDIO
+
+I,Ringdown 1 (usec),9,input,numeric
+
+ENDIO
+
+
+I,SD of CH4 (ppm),10,input,numeric
+
+ENDIO
+
+I,SD of CH4 (dry ppm),11,input,numeric
+
+ENDIO
+
+I,SD of CO2 (ppm),12,input,numeric
+
+ENDIO
+
+I,SD of CO2 (dry ppm),13,input,numeric
+
+ENDIO
+
+I,SD of H2O (ppm),14,input,numeric
+
+ENDIO
+
+I,SD of Cell pressure (Torr),15,input,numeric
+
+ENDIO
+
+I,SD of Cell temperature (Celsius),16,input,numeric
+
+ENDIO
+
+I,SD of Ambient temperature (Celsius),17,input,numeric
+
+ENDIO
+
+I,SD of Ringdown 0 (usec),18,input,numeric
+
+ENDIO
+
+I,SD of Ringdown 1 (usec),19,input,numeric
+
+ENDIO
+
 
 F,Poll,0
 function Poll(string out, until)
@@ -62,13 +141,30 @@ ENDIO
 E,OnReceive
 if (strIn == chr(13))
    
+   // HINT EOL contains both CR & LF
    private string datain = ReadUntil(13)
    
-   local.channel.AddValue(strDevice,0,"Input_CH4",1,StrToDouble(Parse(datain,1,",")))// wet basis CH4
-   local.channel.AddValue(strDevice,0,"Input_CH4",2,StrToDouble(Parse(datain,7,",")))// dry CH4
-   local.channel.AddValue(strDevice,0,"Input_CH4",3,StrToDouble(Parse(datain,5,",")))// wet basis CO2
-   local.channel.AddValue(strDevice,0,"Input_CH4",4,StrToDouble(Parse(datain,9,",")))// dry CO2
-   local.channel.AddValue(strDevice,0,"Input_CH4",5,StrToDouble(Parse(datain,3,",")))// H2O
+   // HINT 0 is timestamp (ignored)
+   Channel.AddValue(strDevice,0,"CH4 (ppm)",0,StrToDouble(Parse(datain,1,",")))
+   Channel.AddValue(strDevice,0,"SD of CH4 (ppm)",0,StrToDouble(Parse(datain,2,",")))
+   Channel.AddValue(strDevice,0,"H2O (ppm)",0,StrToDouble(Parse(datain,3,",")))
+   Channel.AddValue(strDevice,0,"SD of H2O (ppm)",0,StrToDouble(Parse(datain,4,",")))
+   Channel.AddValue(strDevice,0,"CO2 (ppm)",0,StrToDouble(Parse(datain,5,",")))
+   Channel.AddValue(strDevice,0,"SD of CO2 (ppm)",0,StrToDouble(Parse(datain,6,",")))
+   Channel.AddValue(strDevice,0,"CH4 (dry ppm)",0,StrToDouble(Parse(datain,7,",")))
+   Channel.AddValue(strDevice,0,"SD of CH4 (dry ppm)",0,StrToDouble(Parse(datain,8,",")))
+   Channel.AddValue(strDevice,0,"CO2 (dry ppm)",0,StrToDouble(Parse(datain,9,",")))
+   Channel.AddValue(strDevice,0,"SD of CO2 (dry ppm)",0,StrToDouble(Parse(datain,10,",")))
+   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,StrToDouble(Parse(datain,11,",")))
+   Channel.AddValue(strDevice,0,"SD of Cell Pressure (Torr)",0,StrToDouble(Parse(datain,12,",")))
+   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,13,",")))
+   Channel.AddValue(strDevice,0,"SD of Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,14,",")))
+   Channel.AddValue(strDevice,0,"Ambient Temperature (Celsius)",0,StrToDouble(Parse(datain,15,",")))
+   Channel.AddValue(strDevice,0,"SD of Ambient Temperature (Celsius)",0,StrToDouble(Parse(datain,16,",")))
+   Channel.AddValue(strDevice,0,"Ringdown 0 (usec)",0,StrToDouble(Parse(datain,17,",")))
+   Channel.AddValue(strDevice,0,"SD of Ringdown 0 (usec)",0,StrToDouble(Parse(datain,18,",")))
+   Channel.AddValue(strDevice,0,"Ringdown 1 (usec)",0,StrToDouble(Parse(datain,19,",")))
+   Channel.AddValue(strDevice,0,"SD of Ringdown 1 (usec)",0,StrToDouble(Parse(datain,20,",")))
    
 Endif
 
@@ -77,40 +173,6 @@ Endif
 ENDIO
 
 E,OnSend
-function Poll(string out, until)
-// this function will poll the port with given string and read
-// the response until the given character.  Returns NULL (empty)
-// if there is an error
-
-if (argc < 2)
-   throw("Invalid number of parameters")
-endif
-private string in
-try
-   // lock the port
-   if (!LockPort())
-      throw("Unable to lock port")
-   endif
-   // clear anything pending
-   Purge()
-   // output our string
-   Write(out)
-   // and read until the eol:
-   in = ReadUntil(until) 
-   // release the port
-   UnlockPort()
-   // and return the response
-   return(in)
-catch()
-   // error occured
-   UnlockPort()
-   throw()
-endcatch
-// return NULL to indicate error.  This should never happen
-// because of the throw() statement above
-return(NULL)
-
-
 
 
 ENDIO
