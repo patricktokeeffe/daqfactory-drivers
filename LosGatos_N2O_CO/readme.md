@@ -5,7 +5,9 @@ Protocol for reading data streamed by serial (RS-232) from a
 
 ![Los Gatos Research N2O/CO in DLT-100 form factor](clipart_isometric.png)
 
-## Port configuration
+## Serial Port Configuration
+
+> *Note: a null modem adapter or null modem cable is required.*
 
 Recommended configuration for analyzer:
 
@@ -25,9 +27,17 @@ Corresponding serial port setup in DAQFactory:
 - Timeout: `1000` msec
 - Flow Control: `None`
 
-## Channels
+## Protocol File
 
-The following channels are provided in DAQFactory:
+The user device protocol file ([`pLosGatos_N2O_CO.ddp`](pLosGatos_N2O_CO.ddp))
+breaks out almost all of the data into individual channels. At this time, 
+diagnostic values are not included.
+
+### I/O Types
+
+Users can select from the following device `I/O Types` in DAQFactory. There is
+no need to set `D#`, `Chn #` or `Timing` since these values are ignored.
+Data acquisition rate is controlled by the serial output rate of the analyzer.
 
 - Ambient temperature (Celsius)
 - Cell pressure (Torr)
@@ -39,10 +49,18 @@ The following channels are provided in DAQFactory:
 - N2O (dry ppb)
 - *Standard error (SE) values for each of the above*
 
+### Example Document
+
+An minimalistic example control document is available [here](example_LGR_N2O_CO.ctl)
+for testing and development purposes. It contains only 7 channels and page elements
+that are suitable for opening with DAQFactory Express. Be sure to update the
+device COM port value to match your system.
+
 ## Notes
 
-1. Units for N2O & CO values are converted to parts per billion (ppb); water is
-   kept in parts per million (ppm).
+1. Units for N2O & CO values are converted to parts per billion (ppb); this is
+   a significant difference from data in files retrieved directly from the analyzer,
+   which use parts per million (ppm).
 2. Ignore the serial port documentation in the user manual - it contains errors.
 
 Example serial port data record:

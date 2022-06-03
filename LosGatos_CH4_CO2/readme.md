@@ -5,7 +5,9 @@ Protocol for reading data streamed by serial (RS-232) from a
 
 ![Clipart of UGGA](clipart.png)
 
-## Port configuration
+## Serial Port Configuration
+
+> *Note: a null modem adapter or null modem cable is required.*
 
 Recommended configuration for analyzer:
 
@@ -25,9 +27,18 @@ Corresponding serial port setup in DAQFactory:
 - Timeout: `1000` msec
 - Flow Control: `None`
 
-## Channels
+## Protocol File
 
-The following channels are provided in DAQFactory:
+The user device protocol file ([`pLosGatos_CH4_CO2.ddp`](pLosGatos_CH4_CO2.ddp))
+breaks out almost all of the data into individual channels. At this time, 
+certain diagnostic values and values related to the MIU valve position are not
+included.
+
+### I/O Types
+
+Users can select from the following device `I/O Types` in DAQFactory. There is
+no need to set `D#`, `Chn #` or `Timing` since these values are ignored.
+Data acquisition rate is controlled by the serial output rate of the analyzer.
 
 - Ambient Temperature (Celsius)
 - Cell Pressure (Torr)
@@ -38,11 +49,17 @@ The following channels are provided in DAQFactory:
 - CH4 (dry ppm)
 - H2O (ppm)
 - Ringdown 0 (usec)
-- RIngdown 1 (usec)
+- Ringdown 1 (usec)
 - *Standard deviation (SD) values for each of the above*
 
-## Notes
+### Example Document
 
+An minimalistic example control document is available [here](example_LGR_CH4_CO2.ctl)
+for testing and development purposes. It contains only 7 channels and page elements
+that are suitable for opening with DAQFactory Express. Be sure to update the
+device COM port value to match your system.
+
+## Notes
 
 Sample data from internal data file indicating position and units:
 
