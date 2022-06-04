@@ -142,10 +142,10 @@ if (strIn == chr(10))
    Channel.AddValue(strDevice,0,"SE of CO (dry ppb)",0,StrToDouble(Parse(datain,8,","))*1000)
    Channel.AddValue(strDevice,0,"N2O (dry ppb)",0,StrToDouble(Parse(datain,9,","))*1000)
    Channel.AddValue(strDevice,0,"SE of N2O (dry ppb)",0,StrToDouble(Parse(datain,10,","))*1000)
-   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,StrToDouble(Parse(datain,11,","))
-   Channel.AddValue(strDevice,0,"SE of Cell Pressure (Torr)",0,StrToDouble(Parse(datain,12,","))
-   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,13,","))
-   Channel.AddValue(strDevice,0,"SE of Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,14,","))
+   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,StrToDouble(Parse(datain,11,",")))
+   Channel.AddValue(strDevice,0,"SE of Cell Pressure (Torr)",0,StrToDouble(Parse(datain,12,",")))
+   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,13,",")))
+   Channel.AddValue(strDevice,0,"SE of Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,14,",")))
    
 Endif
 
