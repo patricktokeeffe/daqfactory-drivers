@@ -16,7 +16,10 @@ Recommended configuration for analyzer:
 - Stop Bits: `1`
 - Time Stamp: `Absolute Local American: mm/dd/yyyy, hh:mms:ss.ssss`
 - Delimiter: `Comma` (required for proper data parsing)
-- Rate = N: `1`
+- Rate = N: `2`
+
+> *Testing suggests N=1 is too fast for reliable data parsing, resulting in zero values
+> or values which are off by an order of magnitude (x10 or x100 more).*
 
 Corresponding serial port setup in DAQFactory:
 
