@@ -127,25 +127,23 @@ if (strIn == chr(10))
    
    //HINT no carriage return, only line feed
    private string datain = ReadUntil(10)
+   private string vals = Parse(datain,-1,",")
    
-   //HINT don't reference the user manual - it's completely inaccurate
-   //because Conversions "aren't supported" for serial devices... convert ppm -> ppb
-   //
    // 0 is timestamp (ignored)
-   Channel.AddValue(strDevice,0,"CO (ppb)",0,StrToDouble(Parse(datain,1,","))*1000)
-   Channel.AddValue(strDevice,0,"SE of CO (ppb)",0,StrToDouble(Parse(datain,2,","))*1000)
-   Channel.AddValue(strDevice,0,"N2O (ppb)",0,StrToDouble(Parse(datain,3,","))*1000)
-   Channel.AddValue(strDevice,0,"SE of N2O (ppb)",0,StrToDouble(Parse(datain,4,","))*1000)
-   Channel.AddValue(strDevice,0,"H2O (ppm)",0,StrToDouble(Parse(datain,5,",")))
-   Channel.AddValue(strDevice,0,"SE of H2O (ppm)",0,StrToDouble(Parse(datain,6,",")))
-   Channel.AddValue(strDevice,0,"CO (dry ppb)",0,StrToDouble(Parse(datain,7,","))*1000)
-   Channel.AddValue(strDevice,0,"SE of CO (dry ppb)",0,StrToDouble(Parse(datain,8,","))*1000)
-   Channel.AddValue(strDevice,0,"N2O (dry ppb)",0,StrToDouble(Parse(datain,9,","))*1000)
-   Channel.AddValue(strDevice,0,"SE of N2O (dry ppb)",0,StrToDouble(Parse(datain,10,","))*1000)
-   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,StrToDouble(Parse(datain,11,",")))
-   Channel.AddValue(strDevice,0,"SE of Cell Pressure (Torr)",0,StrToDouble(Parse(datain,12,",")))
-   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,13,",")))
-   Channel.AddValue(strDevice,0,"SE of Cell Temperature (Celsius)",0,StrToDouble(Parse(datain,14,",")))
+   Channel.AddValue(strDevice,0,"CO (ppb)",0,StrToDouble(vals[1])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"SE of CO (ppb)",0,StrToDouble(vals[2])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"N2O (ppb)",0,StrToDouble(vals[3])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"SE of N2O (ppb)",0,StrToDouble(vals[4])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"H2O (ppm)",0,StrToDouble(vals[5]))
+   Channel.AddValue(strDevice,0,"SE of H2O (ppm)",0,StrToDouble(vals[6]))
+   Channel.AddValue(strDevice,0,"CO (dry ppb)",0,StrToDouble(vals[7])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"SE of CO (dry ppb)",0,StrToDouble(vals[8])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"N2O (dry ppb)",0,StrToDouble(vals[9])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"SE of N2O (dry ppb)",0,StrToDouble(vals[10])*1000) // ppm -> ppb
+   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,StrToDouble(vals[11]))
+   Channel.AddValue(strDevice,0,"SE of Cell Pressure (Torr)",0,StrToDouble(vals[12]))
+   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,StrToDouble(vals[13]))
+   Channel.AddValue(strDevice,0,"SE of Cell Temperature (Celsius)",0,StrToDouble(vals[14]))
    
 Endif
 
