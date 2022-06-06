@@ -125,14 +125,14 @@ return(NULL)
 ENDIO
 
 E,OnLoad
-
+print("Loaded Los Gatos Research CH4/CO2/H2O analyzer on port "+Device.PortName)
 
 
 
 ENDIO
 
 E,OnUnload
-
+print("Unloaded Los Gatos Research CH4/CO2/H2O analyzer on port "+Device.PortName)
 
 
 
