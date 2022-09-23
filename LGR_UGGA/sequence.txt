@@ -1,0 +1,69 @@
+// Data acquisition loop for Los Gatos Research (LGR) CH4/CO2/H2O (UGGA) analyzer
+//
+// Thread priority: 5 - Acquisition
+// Auto-start: [X]
+//
+// Listens for streaming data record and parses when newline arrives
+//
+// DAQFactory Device Setup
+// -----------------------
+// * Quick > Device Configuration > New Serial (RS232/RS485) / Ethernet (TCP/IP) device
+// * Device Name: LGR_UGGA
+// * Serial Port > New Serial (RS232/422/485)
+//    * Connection Name: LGR_UGGA
+//    * Serial port # (COM): [update to match your computer]
+//    * Baud: 115200
+//    * Byte size: 8
+//    * Parity: None
+//    * Stop bits: 1
+//    * Timeout: 1000 msec
+//    * Flow control type: None
+// * Protocol
+//    * NULL protocol
+// * Channels
+//    * UGGA_CH4
+//    * UGGA_CH4_dry
+//    * UGGA_CO2
+//    * UGGA_CO2_dry
+//    * UGGA_H2O
+//    * UGGA_amb_T
+//    * UGGA_cell_T
+//    * UGGA_cell_P
+//
+// Analyzer Configuration
+// ----------------------
+// * Baud rate: 115200
+// * Parity: None
+// * Stop Bits: 1
+// * Delimiter: Comma
+// * Rate = N: 1 (recommended)
+
+private string msg
+private string vals
+
+? FormatDateTime("%c ",SysTime())+"LGR UGGA: Loaded on port "+Device.LGR_UGGA.PortName+" (COM "+Device.LGR_UGGA.Port+")"
+Device.LGR_UGGA.Purge()
+while (1)
+   try
+      msg = Device.LGR_UGGA.ReadUntil(10) // EOL = <CR><LF>
+      vals = Parse(HideHidden(msg),-1,",")
+      
+      if (StrToDouble(vals[21]) == 3) // Fit_Flag
+         // HINT only 8 channels for compatibility with DAQFactory Express (free version)
+         UGGA_CH4.AddValue(InsertTime(StrToDouble(vals[1]),msg.Time,0))
+         UGGA_H2O.AddValue(InsertTime(StrToDouble(vals[3]),msg.Time,0))
+         UGGA_CO2.AddValue(InsertTime(StrToDouble(vals[5]),msg.Time,0))
+         UGGA_CH4_dry.AddValue(InsertTime(StrToDouble(vals[7]),msg.Time,0))
+         UGGA_CO2_dry.AddValue(InsertTime(StrToDouble(vals[9]),msg.Time,0))
+         UGGA_cell_P.AddValue(InsertTime(StrToDouble(vals[11]),msg.Time,0))
+         UGGA_cell_T.AddValue(InsertTime(StrToDouble(vals[13]),msg.Time,0))
+         UGGA_amb_T.AddValue(InsertTime(StrToDouble(vals[15]),msg.Time,0))
+      else
+         ? FormatDateTime("%c ",SysTime())+"LGR UGGA: Discarding invalid serial data message"
+      endif
+   catch()
+      // ignore errors
+   endcatch
+   
+   delay(0.1)
+endwhile

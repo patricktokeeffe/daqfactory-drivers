@@ -1,0 +1,70 @@
+// Data acquisition loop for Los Gatos Research (LGR) N2O/CO analyzer
+//
+// Thread priority: 5 - Acquisition
+// Auto-start: [X]
+//
+// Listens for streaming data record and parses when newline arrives.
+// Scales N2O/CO values from ppm to ppb.
+//
+// DAQFactory Device Setup
+// -----------------------
+// * Quick > Device Configuration > New Serial (RS232/RS485) / Ethernet (TCP/IP) device
+// * Device Name: LGR_N2O_CO
+// * Serial Port > New Serial (RS232/422/485)
+//    * Connection Name: LGR_N2O_CO
+//    * Serial port # (COM): [update to match your computer]
+//    * Baud: 115200
+//    * Byte size: 8
+//    * Parity: None
+//    * Stop bits: 1
+//    * Timeout: 1000 msec
+//    * Flow control type: None
+// * Protocol
+//    * NULL protocol
+// * Channels
+//    * LGR_CO
+//    * LGR_CO_dry
+//    * LGR_N2O
+//    * LGR_N2O_dry
+//    * LGR_H2O
+//    * LGR_amb_T
+//    * LGR_cell_T
+//    * LGR_cell_P
+//
+// Analyzer Configuration
+// ----------------------
+// * Baud rate: 115200
+// * Parity: None
+// * Stop Bits: 1
+// * Delimiter: Comma
+// * Rate = N: 1 (recommended)
+
+private string msg
+private string vals
+
+? FormatDateTime("%c ",SysTime())+"LGR N2O/CO: Loaded on port "+Device.LGR_N2O_CO.PortName+" (COM "+Device.LGR_N2O_CO.Port+")"
+Device.LGR_N2O_CO.Purge()
+while (1)
+   try
+      msg = Device.LGR_N2O_CO.ReadUntil(10) // EOL = <LF>
+      vals = Parse(HideHidden(msg),-1,",")
+      
+      if (StrToDouble(vals[23]) == 3) // Fit_Flag
+         // HINT only 8 channels for compatibility with DAQFactory Express (free version)
+         LGR_CO.AddValue(InsertTime(StrToDouble(vals[1])*1000,msg.Time,0))
+         LGR_N2O.AddValue(InsertTime(StrToDouble(vals[3])*1000,msg.Time,0))
+         LGR_H2O.AddValue(InsertTime(StrToDouble(vals[5]),msg.Time,0))
+         LGR_CO_dry.AddValue(InsertTime(StrToDouble(vals[7])*1000,msg.Time,0))
+         LGR_N2O_dry.AddValue(InsertTime(StrToDouble(vals[9])*1000,msg.Time,0))
+         LGR_cell_P.AddValue(InsertTime(StrToDouble(vals[11]),msg.Time,0))
+         LGR_cell_T.AddValue(InsertTime(StrToDouble(vals[13]),msg.Time,0))
+         LGR_amb_T.AddValue(InsertTime(StrToDouble(vals[15]),msg.Time,0))
+      else
+         ? FormatDateTime("%c ",SysTime())+"LGR N2O/CO: Discarding invalid serial data message"
+      endif
+   catch()
+      // ignore errors
+   endcatch
+   
+   delay(0.05)
+endwhile
