@@ -1,5 +1,8 @@
 U,LGR_UGGA
 I,CH4 (ppm),0,input,numeric
+// Serial (RS232) driver for Los Gatos Research CH4/CO2/H2O (UGGA) analyzer
+// Patrick O'Keeffe <pokeeffe@wsu.edu>
+// Version 1.0
 //
 // The MIT License
 // Copyright (c) 2020 WSU Laboratory for Atmospheric Research
@@ -22,16 +25,15 @@ ENDIO
 I,H2O (ppm),4,input,numeric
 
 ENDIO
-
-I,Cell pressure (Torr),5,input,numeric
-
-ENDIO
-
-I,Cell temperature (Celsius),6,input,numeric
+I,Cell Pressure (Torr),5,input,numeric
 
 ENDIO
 
-I,Ambient temperature (Celsius),7,input,numeric
+I,Cell Temperature (Celsius),6,input,numeric
+
+ENDIO
+
+I,Ambient Temperature (Celsius),7,input,numeric
 
 ENDIO
 
@@ -40,6 +42,22 @@ I,Ringdown 0 (usec),8,input,numeric
 ENDIO
 
 I,Ringdown 1 (usec),9,input,numeric
+
+ENDIO
+
+I,Fit Flag,20,input,numeric
+
+ENDIO
+
+I,MIU Valve,21,input,numeric
+
+ENDIO
+
+I,MIU Description,22,input,string
+
+ENDIO
+
+I,Status,23,input,string
 
 ENDIO
 
@@ -64,15 +82,15 @@ I,SD of H2O (ppm),14,input,numeric
 
 ENDIO
 
-I,SD of Cell pressure (Torr),15,input,numeric
+I,SD of Cell Pressure (Torr),15,input,numeric
 
 ENDIO
 
-I,SD of Cell temperature (Celsius),16,input,numeric
+I,SD of Cell Temperature (Celsius),16,input,numeric
 
 ENDIO
 
-I,SD of Ambient temperature (Celsius),17,input,numeric
+I,SD of Ambient Temperature (Celsius),17,input,numeric
 
 ENDIO
 
@@ -119,58 +137,70 @@ endcatch
 // because of the throw() statement above
 return(NULL)
 
-
-
-
 ENDIO
 
+
 E,OnLoad
-print("Loaded Los Gatos Research CH4/CO2/H2O analyzer on port "+Device.PortName)
 
+private string msg
+private string vals
+private fit_flag
 
+Channel.AddValue(strDevice,0,"Status",0,"Loaded on port "+PortName+" (COM "+Port+")")
+Purge()
+
+while (1)
+   try
+      msg = ReadUntil(10) // EOL = <CR><LF>
+      vals = Parse(HideHidden(msg),-1,",")
+   
+      fit_flag = StrToDouble(vals[21])
+      if (fit_flag == 3)
+         Channel.AddValue(strDevice,0,"CH4 (ppm)",0,InsertTime(StrToDouble(vals[1]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of CH4 (ppm)",0,InsertTime(StrToDouble(vals[2]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"H2O (ppm)",0,InsertTime(StrToDouble(vals[3]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of H2O (ppm)",0,InsertTime(StrToDouble(vals[4]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"CO2 (ppm)",0,InsertTime(StrToDouble(vals[5]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of CO2 (ppm)",0,InsertTime(StrToDouble(vals[6]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"CH4 (dry ppm)",0,InsertTime(StrToDouble(vals[7]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of CH4 (dry ppm)",0,InsertTime(StrToDouble(vals[8]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"CO2 (dry ppm)",0,InsertTime(StrToDouble(vals[9]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of CO2 (dry ppm)",0,InsertTime(StrToDouble(vals[10]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,InsertTime(StrToDouble(vals[11]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of Cell Pressure (Torr)",0,InsertTime(StrToDouble(vals[12]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,InsertTime(StrToDouble(vals[13]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of Cell Temperature (Celsius)",0,InsertTime(StrToDouble(vals[14]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"Ambient Temperature (Celsius)",0,InsertTime(StrToDouble(vals[15]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of Ambient Temperature (Celsius)",0,InsertTime(StrToDouble(vals[16]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"Ringdown 0 (usec)",0,InsertTime(StrToDouble(vals[17]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of Ringdown 0 (usec)",0,InsertTime(StrToDouble(vals[18]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"Ringdown 1 (usec)",0,InsertTime(StrToDouble(vals[19]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"SD of Ringdown 1 (usec)",0,InsertTime(StrToDouble(vals[20]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"Fit Flag",0,InsertTime(fit_flag,msg.Time,0))
+         Channel.AddValue(strDevice,0,"MIU Valve",0,InsertTime(StrToDouble(vals[22]),msg.Time,0))
+         Channel.AddValue(strDevice,0,"MIU Description",0,InsertTime(vals[23],msg.Time,0))
+      Else
+         Channel.AddValue(strDevice,0,"Status",0,"Discarding invalid serial data message")
+      EndIf
+   catch("C1136")
+      // silently ignore timeouts
+   endcatch
+   catch()
+      // all other errors ignore but report
+      Channel.AddValue(strDevice,0,"Status",0,"Ignoring "+strLastError)
+   endcatch
+
+   delay(0.1)
+endwhile
 
 ENDIO
 
 E,OnUnload
-print("Unloaded Los Gatos Research CH4/CO2/H2O analyzer on port "+Device.PortName)
-
-
+Channel.AddValue(strDevice,0,"Status",0,"Unloaded device")
 
 ENDIO
 
 E,OnReceive
-if (strIn == chr(13))
-   
-   // HINT EOL contains both CR & LF
-   private string msg = ReadUntil(13)
-   private string vals = Parse(msg,-1,",")
-   
-   //TODO verify message is not a partial record before parsing and if not, discard it
-   
-   // HINT 0 is timestamp (ignored)
-   Channel.AddValue(strDevice,0,"CH4 (ppm)",0,InsertTime(StrToDouble(vals[1]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of CH4 (ppm)",0,InsertTime(StrToDouble(vals[2]),msg.time,0))
-   Channel.AddValue(strDevice,0,"H2O (ppm)",0,InsertTime(StrToDouble(vals[3]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of H2O (ppm)",0,InsertTime(StrToDouble(vals[4]),msg.time,0))
-   Channel.AddValue(strDevice,0,"CO2 (ppm)",0,InsertTime(StrToDouble(vals[5]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of CO2 (ppm)",0,InsertTime(StrToDouble(vals[6]),msg.time,0))
-   Channel.AddValue(strDevice,0,"CH4 (dry ppm)",0,InsertTime(StrToDouble(vals[7]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of CH4 (dry ppm)",0,InsertTime(StrToDouble(vals[8]),msg.time,0))
-   Channel.AddValue(strDevice,0,"CO2 (dry ppm)",0,InsertTime(StrToDouble(vals[9]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of CO2 (dry ppm)",0,InsertTime(StrToDouble(vals[10]),msg.time,0))
-   Channel.AddValue(strDevice,0,"Cell Pressure (Torr)",0,InsertTime(StrToDouble(vals[11]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of Cell Pressure (Torr)",0,InsertTime(StrToDouble(vals[12]),msg.time,0))
-   Channel.AddValue(strDevice,0,"Cell Temperature (Celsius)",0,InsertTime(StrToDouble(vals[13]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of Cell Temperature (Celsius)",0,InsertTime(StrToDouble(vals[14]),msg.time,0))
-   Channel.AddValue(strDevice,0,"Ambient Temperature (Celsius)",0,InsertTime(StrToDouble(vals[15]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of Ambient Temperature (Celsius)",0,InsertTime(StrToDouble(vals[16]),msg.time,0))
-   Channel.AddValue(strDevice,0,"Ringdown 0 (usec)",0,InsertTime(StrToDouble(vals[17]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of Ringdown 0 (usec)",0,InsertTime(StrToDouble(vals[18]),msg.time,0))
-   Channel.AddValue(strDevice,0,"Ringdown 1 (usec)",0,InsertTime(StrToDouble(vals[19]),msg.time,0))
-   Channel.AddValue(strDevice,0,"SD of Ringdown 1 (usec)",0,InsertTime(StrToDouble(vals[20]),msg.time,0))
-   
-Endif
-
 
 
 ENDIO
