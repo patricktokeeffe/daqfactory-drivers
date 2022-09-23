@@ -3,7 +3,7 @@
 Protocol for reading data streamed by serial (RS-232) from a
 [Los Gatos Research N2O/CO Analyzer](http://losgatosresearch.com/analyzers/overview.php?prodid=20).
 
-![Los Gatos Research N2O/CO in DLT-100 form factor](clipart_isometric.png)
+![Los Gatos Research N2O/CO in DLT-100 form factor](clipart.png)
 
 ## Serial Port Configuration
 
@@ -32,7 +32,7 @@ Corresponding serial port setup in DAQFactory:
 
 ## Protocol File
 
-The user device protocol file ([`pLosGatos_N2O_CO.ddp`](pLosGatos_N2O_CO.ddp))
+The user device protocol file ([`pLGR_N2O_CO.ddp`](pLGR_N2O_CO.ddp))
 breaks out almost all of the data into individual channels. At this time, 
 diagnostic values are not included.
 
@@ -54,7 +54,7 @@ Data acquisition rate is controlled by the serial output rate of the analyzer.
 
 ### Example Document
 
-An minimalistic example control document is available [here](example_LGR_N2O_CO.ctl)
+An minimalistic example control document is available [here](LGR_N2O_CO_protocol.ctl)
 for testing and development purposes. It contains only 7 channels and page elements
 that are suitable for opening with DAQFactory Express. Be sure to update the
 device COM port value to match your system.
@@ -68,7 +68,7 @@ device COM port value to match your system.
 
 Example serial port data record:
 
-![Screenshot of example serial data record](example_serial_data.png "Example serial data record")
+![Screenshot of example serial data record](data.png "Example serial data record")
 
 Sample data from internal data file indicating position and units:
 

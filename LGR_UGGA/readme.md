@@ -29,7 +29,7 @@ Corresponding serial port setup in DAQFactory:
 
 ## Protocol File
 
-The user device protocol file ([`pLosGatos_CH4_CO2.ddp`](pLosGatos_CH4_CO2.ddp))
+The user device protocol file ([`pLGR_UGGA.ddp`](pLGR_UGGA.ddp))
 breaks out almost all of the data into individual channels. At this time, 
 certain diagnostic values and values related to the MIU valve position are not
 included.
@@ -54,7 +54,7 @@ Data acquisition rate is controlled by the serial output rate of the analyzer.
 
 ### Example Document
 
-An minimalistic example control document is available [here](example_LGR_CH4_CO2.ctl)
+An minimalistic example control document is available [here](LGR_UGGA_protocol.ctl)
 for testing and development purposes. It contains only 7 channels and page elements
 that are suitable for opening with DAQFactory Express. Be sure to update the
 device COM port value to match your system.
